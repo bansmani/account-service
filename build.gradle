@@ -19,12 +19,6 @@ group 'com.revolut'
 version '1.0-SNAPSHOT'
 
 
-//dependencies {
-//    //in-memory middleware/backend
-//    implementation libraries.H2
-//    implementation libraries.AMQ
-//}
-
 allprojects {
 
     repositories {
@@ -46,6 +40,7 @@ allprojects {
     dependencies {
         implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
         implementation libraries.LOGGER
+        compile libraries.COROUTINE
 
         if (project.name != "domain-model") {
             implementation libraries.SERIALIZER
@@ -79,6 +74,7 @@ project(":credit-service") {
     dependencies {
         implementation project(":ORMLite")
         implementation project(":message-broker-service")
+        implementation project(":lockmanager-service")
     }
 }
 
@@ -86,6 +82,7 @@ project(":debit-service") {
     dependencies {
         implementation project(":ORMLite")
         implementation project(":message-broker-service")
+        implementation project(":lockmanager-service")
     }
 }
 
