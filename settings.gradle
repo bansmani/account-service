@@ -1,0 +1,12 @@
+rootProject.name = 'moneytransfer'
+
+include 'transaction-service'
+include 'domain-model'
+include 'debit-service'
+include 'credit-service'
+include 'balance-service'
+
+
+include 'ORMLite'
+include 'message-broker-service'
+include 'lockmanager-service'

@@ -1,0 +1,19 @@
+ext {
+    libraries = [
+            H2          : 'com.h2database:h2:1.4.199',
+            AMQ         : 'org.apache.activemq:activemq-all:5.15.10',
+            LOGGER      : 'org.slf4j:slf4j-simple:1.7.28',
+            SERIALIZER  : [
+                    'com.fasterxml.jackson.core:jackson-annotations:2.9.9',
+                    'com.fasterxml.jackson.core:jackson-databind:2.9.9.3',
+                    'com.google.code.gson:gson:2.8.5'
+            ],
+            TEST        : [
+                    "org.junit.jupiter:junit-jupiter-api:5.5.2",
+                    "io.mockk:mockk:1.9.+",
+                    'org.assertj:assertj-core:3.13.2'
+            ],
+            TEST_RUNTIME: 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
+    ]
+}
+
