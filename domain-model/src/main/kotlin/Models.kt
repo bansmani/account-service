@@ -29,6 +29,7 @@ class Transaction(
     val initiateTime: Instant = Instant.now()
     val endTime: Instant? = null
     val status: TransactionStatus = TransactionStatus.NEW
+    val errorMessage: String = ""
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -57,7 +58,7 @@ data class AccountEntry(
     val description: String? = null
 )
 
-data class TransactionStatusDTO(val transactionId: String, val status: TransactionStatus, val errorMessages: String )
+data class TransactionStatusDTO(val transactionId: String, val status: TransactionStatus, val errorMessage: String )
 
 enum class TransactionStatus {
     NEW,

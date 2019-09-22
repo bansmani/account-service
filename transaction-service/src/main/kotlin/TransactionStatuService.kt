@@ -12,9 +12,9 @@ object TransactionStatuService {
 
     //add timeout
     fun getTransactionStatusBlocking(transactionId: String): TransactionStatusDTO? {
-        while (!transactionIdEventList.contains(transactionId)) {
+        while (!transactionIdEventList.containsKey(transactionId)) {
             runBlocking {
-                delay(1000)
+                delay(1)
             }
             println ("waiting for status")
         }
@@ -25,7 +25,7 @@ object TransactionStatuService {
         DomainEventManager.startTransactionStatusMessageListener {
             //raise events on Observable transactions to avoid BD events
             CrudRepsitory.updateFields(Transaction::class.java, it)
-            transactionIdEventList.put(it.transactionId, it)
+            transactionIdEventList[it.transactionId] = it
         }
     }
 }

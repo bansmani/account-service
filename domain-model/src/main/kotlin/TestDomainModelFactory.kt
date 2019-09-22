@@ -16,11 +16,11 @@ class TestDomainModelFactory @TestOnly constructor() {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMddhhmmSSS")).toLong()
     }
 
-    fun buildCreditInstructionDto() =
-        InstructionDTO(generateAccNumber(), 500.0, InstructionType.CREDIT, "Tuition Fees")
+    fun buildCreditInstructionDto(accNumber: Long = generateAccNumber(), amount: Double=500.0) =
+        InstructionDTO(accNumber, amount, InstructionType.CREDIT, "Tuition Fees")
 
-    fun buildDebitInstructionDto() =
-        InstructionDTO(generateAccNumber(), 300.0, InstructionType.DEBIT, "Tuition Fees")
+    fun buildDebitInstructionDto(accNumber: Long = generateAccNumber(), amount: Double=300.0) =
+        InstructionDTO(accNumber, amount, InstructionType.DEBIT, "Tuition Fees")
 
     fun buildCreditEntry(amount: Double=500.0, accNumber: Long = generateAccNumber()) = AccountEntry(accNumber,amount, Instant.now(),
             UUID.randomUUID().toString(),InstructionType.CREDIT,"Test Credit message")

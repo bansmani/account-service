@@ -12,15 +12,10 @@ object TransactionService {
         val debitTrans = createNewTransaction(debitInstruction)
         //blocking  for status
 
-        val debitStatus = TransactionStatuService.getTransactionStatusBlocking(debitTrans.transactionId)
 
-        if (debitStatus?.status == TransactionStatus.FAILED || debitStatus?.status == TransactionStatus.ERROR) {
-            //make a custom error
-            throw Exception(debitStatus.errorMessages)
-        }
 
         val creditInstruction = InstructionDTO(
-            localTransferDTO.fromAccNumber,
+            localTransferDTO.toAccNumber,
             localTransferDTO.amount,
             InstructionType.CREDIT,
             localTransferDTO.description + " " + debitTrans.transactionId
@@ -30,7 +25,7 @@ object TransactionService {
         val creaditStatus = TransactionStatuService.getTransactionStatusBlocking(creditTrans.transactionId)
         if (creaditStatus?.status == TransactionStatus.FAILED || creaditStatus?.status == TransactionStatus.ERROR) {
             //make a custom error
-            throw Exception(creaditStatus.errorMessages)
+            throw Exception(creaditStatus.errorMessage)
         }
         return true
     }
@@ -61,6 +56,12 @@ object TransactionService {
         when (transaction.instructionType) {
             InstructionType.DEBIT -> {
                 DomainEventManager.publishDebit(accountEntry)
+
+                val debitStatus = TransactionStatuService.getTransactionStatusBlocking(transaction.transactionId)
+                if (debitStatus?.status == TransactionStatus.FAILED || debitStatus?.status == TransactionStatus.ERROR) {
+                    //make a custom error
+                    throw Exception(debitStatus.errorMessage)
+                }
             }
             InstructionType.CREDIT -> {
                 DomainEventManager.publishCredit(accountEntry)

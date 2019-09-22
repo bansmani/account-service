@@ -93,7 +93,6 @@ object CrudRepsitory : ICrudRepsitory {
         }
         conditionString = conditionString.removeSuffix(" and ")
         val sql = "update $tableName set ${updateString.removeSuffix(",")} where $conditionString"
-        println(sql)
         return execute(sql)
     }
 
@@ -115,7 +114,6 @@ object CrudRepsitory : ICrudRepsitory {
         conditionString = conditionString.removeSuffix(" and ")
         updateString = updateString.removeSuffix(",")
         val sql = "update $tableName set $updateString where $conditionString"
-        println(sql)
         return execute(sql)
     }
 
@@ -165,12 +163,10 @@ object CrudRepsitory : ICrudRepsitory {
         if (indexedColumns != "") {
             sql += "$createIndexPrefix$indexedColumns); \n"
         }
-        println(sql)
         try {
             execute(sql)
         } catch (e: Exception) {
             val schemaName = tableName.split(".").first()
-            println(e.message)
             if (e.message!!.toLowerCase().contains("schema \"$schemaName\" not found")) {
                 execute("create schema if not exists $schemaName")
                 execute(sql)
@@ -180,16 +176,17 @@ object CrudRepsitory : ICrudRepsitory {
     }
 
     override fun execute(sql: String): Boolean {
-        val connection = ConnectionPool.getConnection()
-        return connection.prepareStatement(sql).execute()
+        //must throw exception
+        println(sql)
+        return ConnectionPool.getConnection().prepareStatement(sql).execute()
     }
 
     /***
      * createTableIfMissing is missing should be avoided in production ready
      */
     override fun save(entity: Any, createTableIfMissing: Boolean): Boolean {
-        logger().warn("createTableIfMissing feature should be turned off for performance & safety")
-        logger().info(entity.toString())
+//        logger().warn("createTableIfMissing feature should be turned off for performance & safety")
+//        logger().info(entity.toString())
         val tableName = getTableName(entity)
 
         val columns = getColumnsAsString(entity)
@@ -197,13 +194,12 @@ object CrudRepsitory : ICrudRepsitory {
 
 
         val sql = "INSERT INTO $tableName ($columns) VALUES ($values)"
-        println(sql)
         return try {
-            ConnectionPool.getConnection().prepareStatement(sql).execute()
+            execute(sql)
         } catch (e: Exception) {
             if (createTableIfMissing) {
                 createTable(entity.javaClass)
-                ConnectionPool.getConnection().prepareStatement(sql).execute()
+                execute(sql)
             } else false
         }
     }
@@ -242,7 +238,10 @@ object CrudRepsitory : ICrudRepsitory {
         return schemaName + tableName
     }
 
-    override fun query(sql: String) = ConnectionPool.getConnection().prepareStatement(sql).executeQuery()
+    override fun query(sql: String): ResultSet {
+        println(sql)
+        return ConnectionPool.getConnection().prepareStatement(sql).executeQuery()
+    }
 
     override fun <T> query(entity: Class<T>): List<T> {
         return query("select * from ${getTableName(entity)}", entity)
@@ -251,13 +250,12 @@ object CrudRepsitory : ICrudRepsitory {
     override fun <T> queryById(value: Any, entity: Class<T>): T? {
         val idColumn = getIdColumn(entity)
         val sql = "select * from ${getTableName(entity)} where ${idColumn.keys.first()}='$value'"
-        println(sql)
         return query(sql, entity).getOrNull(0)
     }
 
     override fun <T> query(sql: String, entity: Class<T>): List<T> {
         val rs = try {
-            ConnectionPool.getConnection().prepareStatement(sql).executeQuery()
+            query(sql)
         } catch (e: java.lang.Exception) {
             return emptyList()
         }
