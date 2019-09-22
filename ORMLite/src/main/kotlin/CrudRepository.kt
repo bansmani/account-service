@@ -4,6 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.ResultSet
+import java.time.LocalDateTime
 import java.util.*
 
 
@@ -56,6 +57,8 @@ interface ICrudRepsitory {
     fun query(sql: String): ResultSet
     fun <T> query(entity: Class<T>): List<T>
     fun createTable(entity: Class<*>): Boolean
+    fun <T> queryById(value: Any, entity: Class<T>): T?
+    fun saveOrUpdate(entity: Any, createTableIfMissing: Boolean = false): Boolean
 
 }
 
@@ -64,6 +67,39 @@ inline fun <reified T> T.logger(): Logger {
 }
 
 object CrudRepsitory : ICrudRepsitory {
+
+    override fun saveOrUpdate(entity: Any, createTableIfMissing: Boolean): Boolean {
+        val tableName = getTableName(entity)
+        val idColumn = getIdColumn(entity.javaClass)
+        val columns = getColumnsAsString(entity).split(",")
+        val values = getValuesAsString(entity).split(",")
+        var updateString = ""
+        var conditionString = ""
+        var counter = 0
+        columns.forEach{
+            if(it!=idColumn?.first){
+                updateString+="$it=${values[counter++]} ,"
+            }
+            else {
+                conditionString+="$it=${values[counter++]}"
+            }
+        }
+         updateString = updateString.removeSuffix(",")
+        val  sql ="update table $tableName set $updateString where $conditionString"
+        println(sql)
+        return execute(sql)
+    }
+
+
+    private fun getIdColumn(entity: Class<*>): Pair<String, Class<*>>? {
+        entity.declaredFields.forEach {
+            if (it.isAnnotationPresent(Id::class.java)) {
+                return Pair(it.name, it.type)
+            }
+        }
+        return null;
+    }
+
 
 
     val typeMap = mapOf<String, String>("String" to "VARCHAR", "Instant" to "TIMESTAMP")
@@ -116,18 +152,9 @@ object CrudRepsitory : ICrudRepsitory {
         logger().warn("createTableIfMissing feature should be turned off for performance & safety")
         logger().info(entity.toString())
         val tableName = getTableName(entity)
-        val columns = entity.javaClass.declaredFields.map { field -> field.name }
-            .reduce { acc, field ->
-                "$acc, $field"
-            }.toString()
 
-        val values = entity.javaClass.declaredFields.map { field -> field.isAccessible = true; field.get(entity) }
-            .map { any ->
-                if (any == null) null else "'${any.toString()}'"
-            }
-            .reduce { acc, value ->
-                "$acc, $value"
-            }.toString()
+        val columns = getColumnsAsString(entity)
+        val values = getValuesAsString(entity)
 
 
         val sql = "INSERT INTO $tableName ($columns) VALUES ($values)"
@@ -140,6 +167,23 @@ object CrudRepsitory : ICrudRepsitory {
                 ConnectionPool.getConnection().prepareStatement(sql).execute()
             } else false
         }
+    }
+
+    private fun getValuesAsString(entity: Any): String {
+        return entity.javaClass.declaredFields.map { field -> field.isAccessible = true; field.get(entity) }
+            .map { any ->
+                if (any == null) null else "'${any.toString()}'"
+            }
+            .reduce { acc, value ->
+                "$acc, $value"
+            }.toString()
+    }
+
+    private fun getColumnsAsString(entity: Any): String {
+        return entity.javaClass.declaredFields.map { field -> field.name }
+            .reduce { acc, field ->
+                "$acc, $field"
+            }.toString()
     }
 
     private fun getTableName(entity: Any): String {
@@ -165,8 +209,23 @@ object CrudRepsitory : ICrudRepsitory {
         return query("select * from ${getTableName(entity)}", entity)
     }
 
+     override fun <T> queryById(value: Any, entity: Class<T>): T? {
+        val idColumn = getIdColumn(entity)
+        if(idColumn!=null){
+            val sql = "select * from ${getTableName(entity)} where ${idColumn.first}='$value'"
+            println(sql)
+            return query(sql, entity).getOrNull(0)
+        }
+         return null
+     }
+
     override fun <T> query(sql: String, entity: Class<T>): List<T> {
-        val rs = ConnectionPool.getConnection().prepareStatement(sql).executeQuery()
+        val rs  = try {
+             ConnectionPool.getConnection().prepareStatement(sql).executeQuery()
+        }catch (e: java.lang.Exception){
+            return emptyList()
+        }
+
         val colCaseInSensitiveMap = entity.declaredFields.map { it.name.toUpperCase() to it.name }.toMap()
         val list = arrayListOf<T>()
         while (rs.next()) {
@@ -185,6 +244,10 @@ object CrudRepsitory : ICrudRepsitory {
                     "double" -> field.setDouble(instance, rs.getDouble(i))
                     "int" -> field.setInt(instance, rs.getInt(i))
                     "String" -> field.set(instance, rs.getString(i))
+                    "Instant"  -> field.set(instance, rs.getTimestamp(i).toInstant())
+                    "LocalDateTime" -> field.set(instance, rs.getTimestamp(i).toLocalDateTime())
+                    "Date" -> field.set(instance, rs.getDate(i))
+                    "LocalDate" -> field.set(instance, rs.getDate(i).toLocalDate())
                     else -> {
                         val enumclass = Class.forName(field.type.name)
                         val valueOf = enumclass.getDeclaredMethod("valueOf", String::class.java)

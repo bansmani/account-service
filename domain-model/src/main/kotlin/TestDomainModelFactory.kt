@@ -2,6 +2,7 @@ import org.jetbrains.annotations.TestOnly
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAmount
 import java.util.*
 
 
@@ -21,10 +22,10 @@ class TestDomainModelFactory @TestOnly constructor() {
     fun buildDebitInstructionDto() =
         InstructionDTO(generateAccNumber(), 300.0, InstructionType.DEBIT, "Tuition Fees")
 
-    fun buildCreditEntry() = AccountEntry(generateAccNumber(),700.0, Instant.now(),
+    fun buildCreditEntry(amount: Double=700.0) = AccountEntry(generateAccNumber(),amount, Instant.now(),
             UUID.randomUUID().toString(),InstructionType.CREDIT,"Test Credit message")
 
-    fun buildDebitEntry() = AccountEntry(generateAccNumber(),700.0, Instant.now(),
+    fun buildDebitEntry(amount: Double=300.0) = AccountEntry(generateAccNumber(),amount, Instant.now(),
         UUID.randomUUID().toString(),InstructionType.DEBIT,"Test Debit message")
 
 

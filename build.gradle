@@ -74,7 +74,8 @@ project(":credit-service") {
     dependencies {
         implementation project(":ORMLite")
         implementation project(":message-broker-service")
-        implementation project(":lockmanager-service")
+        implementation project(":balance-service")
+
     }
 }
 
@@ -83,6 +84,7 @@ project(":debit-service") {
         implementation project(":ORMLite")
         implementation project(":message-broker-service")
         implementation project(":lockmanager-service")
+        implementation project(":balance-service")
     }
 }
 
@@ -90,6 +92,8 @@ project(":balance-service") {
     dependencies {
         implementation project(":ORMLite")
         implementation project(":message-broker-service")
+        implementation project(":lockmanager-service")
+
     }
 }
 
