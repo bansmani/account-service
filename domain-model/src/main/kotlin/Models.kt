@@ -1,9 +1,5 @@
-import javafx.beans.NamedArg
-import jdk.nashorn.internal.runtime.regexp.joni.exception.ErrorMessages
-import java.lang.annotation.Native
 import java.time.Instant
 import java.util.*
-import javax.management.MXBean
 
 data class InstructionDTO(
     val accNumber: Long,
@@ -29,7 +25,7 @@ class Transaction(
     val accNumber: Long, val amount: Double, val description: String? = ""
 ) {
 
-    @Id val id = UUID.randomUUID().toString()
+    @Id val transactionId = UUID.randomUUID().toString()
     val initiateTime: Instant = Instant.now()
     val endTime: Instant? = null
     val status: TransactionStatus = TransactionStatus.NEW
@@ -38,26 +34,26 @@ class Transaction(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
         other as Transaction
-        if (id != other.id) return false
+        if (transactionId != other.transactionId) return false
         return true
     }
 
     override fun hashCode(): Int {
-        return id.hashCode()
+        return transactionId.hashCode()
     }
 
     override fun toString(): String {
-        return "Transaction(transactionType=$instructionType, tansactionId='$id', transactionStartTime=$initiateTime, transactionEndTime=$endTime, transactionStatus=$status)"
+        return "Transaction(transactionType=$instructionType, tansactionId='$transactionId', transactionStartTime=$initiateTime, transactionEndTime=$endTime, transactionStatus=$status)"
     }
 }
 
 
 data class AccountEntry(
-    val accNumber: Long,
+    @Indexed val accNumber: Long,
     val amount: Double,
     val transactionTime: Instant,
-    val transactionId: String,
-    val transactionType: InstructionType,
+    @Id val transactionId: String,
+    @Id val transactionType: InstructionType,
     val description: String? = null
 )
 

@@ -1,6 +1,7 @@
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.Instant
 
 class ORMTest {
 
@@ -38,6 +39,14 @@ class ORMTest {
         //define model
         @Schema("test")
         data class DummyModel(@Id val name: String, @Indexed val data: String, val anint: Int)
+        CrudRepsitory.createTable(DummyModel::class.java)
+    }
+
+    @Test
+    fun `create table with composit pk`() {
+        //define model
+        @Schema("test")
+        data class DummyModel(@Id val name: String, @Indexed val data: String, @Id val anint: Int, val dob: Instant)
         CrudRepsitory.createTable(DummyModel::class.java)
     }
 

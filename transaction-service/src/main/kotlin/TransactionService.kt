@@ -1,6 +1,8 @@
+import TransactionStatuService.transactionStatusPoller
+
 object TransactionService {
 
-    fun localTransfer(localTransferDTO: LocalTransferDTO) {
+    fun localTransfer(localTransferDTO: LocalTransferDTO): Boolean {
         val debitInstruction = InstructionDTO(
             localTransferDTO.fromAccNumber,
             localTransferDTO.amount,
@@ -10,8 +12,9 @@ object TransactionService {
         val debitTrans = createNewTransaction(debitInstruction)
         //blocking  for status
 
-        val debitStatus = TransactionStatuService.getTransactionStatusBlocking(debitTrans.id)
-        if(debitStatus?.status == TransactionStatus.FAILED || debitStatus?.status ==TransactionStatus.ERROR){
+        val debitStatus = TransactionStatuService.getTransactionStatusBlocking(debitTrans.transactionId)
+
+        if (debitStatus?.status == TransactionStatus.FAILED || debitStatus?.status == TransactionStatus.ERROR) {
             //make a custom error
             throw Exception(debitStatus.errorMessages)
         }
@@ -20,16 +23,16 @@ object TransactionService {
             localTransferDTO.fromAccNumber,
             localTransferDTO.amount,
             InstructionType.CREDIT,
-            localTransferDTO.description + " " + debitTrans.id
+            localTransferDTO.description + " " + debitTrans.transactionId
         )
         val creditTrans = createNewTransaction(creditInstruction)
 
-        val creaditStatus = TransactionStatuService.getTransactionStatusBlocking(creditTrans.id)
-        if(creaditStatus?.status == TransactionStatus.FAILED || creaditStatus?.status ==TransactionStatus.ERROR){
+        val creaditStatus = TransactionStatuService.getTransactionStatusBlocking(creditTrans.transactionId)
+        if (creaditStatus?.status == TransactionStatus.FAILED || creaditStatus?.status == TransactionStatus.ERROR) {
             //make a custom error
             throw Exception(creaditStatus.errorMessages)
         }
-
+        return true
     }
 
 
@@ -51,7 +54,7 @@ object TransactionService {
             transaction.accNumber,
             transaction.amount,
             transaction.initiateTime,
-            transaction.id,
+            transaction.transactionId,
             transaction.instructionType,
             transaction.description
         )
@@ -65,5 +68,9 @@ object TransactionService {
         }
         return true
     }
+}
+
+fun main() {
+    transactionStatusPoller()
 }
 

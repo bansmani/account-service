@@ -1,8 +1,10 @@
+import TransactionStatuService.transactionStatusPoller
 import io.mockk.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.io.File
 import java.time.Instant
 
 
@@ -29,7 +31,7 @@ class TransactionServiceTest {
         //then it should be valid
         assertEquals(InstructionType.DEBIT.name, transaction.instructionType!!.name)
         assertEquals(TransactionStatus.NEW.name, transaction.status.name)
-        assertThat(transaction.id).isNotNull().isNotBlank().isNotEmpty()
+        assertThat(transaction.transactionId).isNotNull().isNotBlank().isNotEmpty()
         assertThat(transaction.initiateTime).isNotNull().isInstanceOf(Instant::class.java)
         assertThat(transaction.endTime).isNull()
 
@@ -90,11 +92,11 @@ class TransactionServiceTest {
     fun `transaction service sending debit messages to debit queue`() {
         val debitInstructionPayload = TestDomainModelFactory().buildDebitInstructionDto()
         TransactionService.createNewTransaction(debitInstructionPayload)
-        var entry: AccountEntry? =null
+        var entry: AccountEntry? = null
         DomainEventManager.startDebitMessageLister {
             entry = it
         }
-        while (entry==null){
+        while (entry == null) {
             Thread.sleep(10)
         }
         assertEquals(debitInstructionPayload.accNumber, entry?.accNumber)
@@ -106,17 +108,32 @@ class TransactionServiceTest {
     fun `transaction service sending credit messages to credit queue`() {
         val creditInstruction = TestDomainModelFactory().buildCreditInstructionDto()
         TransactionService.createNewTransaction(creditInstruction)
-        var entry: AccountEntry? =null
+        var entry: AccountEntry? = null
         DomainEventManager.startCreditMessageLister {
             entry = it
         }
-        while (entry==null){
+        while (entry == null) {
             Thread.sleep(10)
         }
         assertEquals(creditInstruction.accNumber, entry?.accNumber)
         assertEquals(InstructionType.CREDIT, entry?.transactionType)
         assertEquals(500.0, entry?.amount)
     }
+
+    @Test
+    fun `local transfer test`() {
+        File("../").walkTopDown()
+            .filter { file -> file.name== "activemq-data"}
+            .forEach { println(it.deleteRecursively()) }
+//        DebitService.start()
+//        CreditService.start()
+//        transactionStatusPoller()
+//        TransactionService.localTransfer(LocalTransferDTO(1234, 5678, 250.0, "transfer A to B"))
+//        TransactionService.localTransfer(LocalTransferDTO(1234, 5678, 300.0, "transfer A to B"))
+
+    }
+
+
 }
 
 

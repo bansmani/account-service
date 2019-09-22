@@ -67,6 +67,8 @@ project(":transaction-service") {
     dependencies {
         implementation project(":ORMK")
         implementation project(":message-broker-service")
+        testImplementation project(":debit-service")
+        testImplementation project(":credit-service")
     }
 }
 

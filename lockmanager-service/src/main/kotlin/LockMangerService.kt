@@ -2,29 +2,29 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.annotations.TestOnly
 
+//could use google distributed lock algorithm
 object LockMangerService : IlockManagerService {
 
 
     //TODO: Redis could used for distributed locks (RedLock)
     private val lockCollection = HashSet<String>()
 
-    override fun releaseLock(lock: String): Boolean {
-        if (!lockCollection.remove(lock)) throw LockReleaseException("Lock already Expired")
-        return true
+    override fun releaseLock(lockName: String) {
+        lockCollection.remove(lockName)
     }
 
-    override fun acquireLock(lock: String, timeout: Long): Boolean {
+    override fun acquireLock(lockName: String, timeout: Long) {
         var counter = timeout + 1
         while (counter-- > 0) {
-            if (lockCollection.add(lock)) {
-                return true
+            if (lockCollection.add(lockName)) {
+                return
             } else {
                 runBlocking {
                     delay(1)
                 }
             }
         }
-        throw LockAquireFailed(lock)
+        throw LockAquireFailed(lockName)
     }
 
     //for testing, should not go in production
@@ -40,12 +40,13 @@ class LockAquireFailed(lockName: String) : Throwable(lockName)
 
 
 interface IlockManagerService {
-    fun acquireLock(lockName: String, timeout: Long = 0): Boolean
-    fun releaseLock(lockName: String): Boolean
+    fun acquireLock(lockName: String, timeout: Long = 0)
+    fun releaseLock(lockName: String)
 }
 
 
 //proposed for TTL lock including automatic expiry
+//only lock owner and LockMangerAdmin can release locks
 //data class Lock(val lockName: String) {
 //  lockType (autoexpire lock)
 //  LockDuration

@@ -85,13 +85,14 @@ object CrudRepsitory : ICrudRepsitory {
         var conditionString = ""
         val idColumn = getIdColumn(entity)
         data.forEach { entry ->
-            if (entry.key == idColumn?.first) {
-                conditionString += "${entry.key}='${entry.value}"
+            if (idColumn.contains(entry.key)) {
+                conditionString += "${entry.key}='${entry.value}' and "
             } else {
-                updateString += "${entry.key}='${entry.value},"
+                updateString += "${entry.key}='${entry.value}',"
             }
         }
-        val sql = "update $tableName set $updateString where $conditionString"
+        conditionString = conditionString.removeSuffix(" and ")
+        val sql = "update $tableName set ${updateString.removeSuffix(",")} where $conditionString"
         println(sql)
         return execute(sql)
     }
@@ -105,12 +106,13 @@ object CrudRepsitory : ICrudRepsitory {
         var conditionString = ""
         var counter = 0
         columns.forEach {
-            if (it != idColumn?.first) {
-                updateString += "$it=${values[counter++]} ,"
+            if (idColumn.contains(it)) {
+                conditionString += "$it=${values[counter++]} and "
             } else {
-                conditionString += "$it=${values[counter++]}"
+                updateString += "$it=${values[counter++]} ,"
             }
         }
+        conditionString = conditionString.removeSuffix(" and ")
         updateString = updateString.removeSuffix(",")
         val sql = "update $tableName set $updateString where $conditionString"
         println(sql)
@@ -118,13 +120,14 @@ object CrudRepsitory : ICrudRepsitory {
     }
 
 
-    private fun getIdColumn(entity: Class<*>): Pair<String, Class<*>>? {
+    private fun getIdColumn(entity: Class<*>): Map<String, Class<*>> {
+        val map = mutableMapOf<String, Class<*>>()
         entity.declaredFields.forEach {
             if (it.isAnnotationPresent(Id::class.java)) {
-                return Pair(it.name, it.type)
+                map.put(it.name, it.type)
             }
         }
-        return null;
+        return map;
     }
 
 
@@ -133,6 +136,7 @@ object CrudRepsitory : ICrudRepsitory {
         val tableName = getTableName(entity)
         var createTablePrefix = "CREATE TABLE IF NOT EXISTS $tableName ("
         var columnString = ""
+        var pkColumns = ""
         var createIndexPrefix =
             "CREATE INDEX IF NOT EXISTS IDX_${tableName.replace(".", "_").toUpperCase()} ON $tableName("
         var indexedColumns = ""
@@ -144,11 +148,20 @@ object CrudRepsitory : ICrudRepsitory {
             columnString += typeMap[field.type.simpleName]
                 ?: if (field.type.isEnum) "VARCHAR" else field.type.simpleName.toUpperCase()
 
-            columnString += if (field.isAnnotationPresent(Id::class.java)) " PRIMARY KEY" else ""
             indexedColumns += if (field.isAnnotationPresent(Indexed::class.java)) field.name else ""
 
+            pkColumns += if (field.isAnnotationPresent(Id::class.java)) field.name + "," else ""
+
         }
-        var sql = createTablePrefix + columnString.removePrefix(",").trim() + "); \n"
+
+        columnString = columnString.removePrefix(",").trim()
+        if (pkColumns != "") {
+            pkColumns = pkColumns.removeSuffix(",")
+            pkColumns = ", PRIMARY KEY ($pkColumns)"
+        }
+        columnString += pkColumns
+
+        var sql = "$createTablePrefix$columnString); \n"
         if (indexedColumns != "") {
             sql += "$createIndexPrefix$indexedColumns); \n"
         }
@@ -237,12 +250,9 @@ object CrudRepsitory : ICrudRepsitory {
 
     override fun <T> queryById(value: Any, entity: Class<T>): T? {
         val idColumn = getIdColumn(entity)
-        if (idColumn != null) {
-            val sql = "select * from ${getTableName(entity)} where ${idColumn.first}='$value'"
-            println(sql)
-            return query(sql, entity).getOrNull(0)
-        }
-        return null
+        val sql = "select * from ${getTableName(entity)} where ${idColumn.keys.first()}='$value'"
+        println(sql)
+        return query(sql, entity).getOrNull(0)
     }
 
     override fun <T> query(sql: String, entity: Class<T>): List<T> {

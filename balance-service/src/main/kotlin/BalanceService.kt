@@ -3,12 +3,17 @@ import java.time.Instant
 import java.util.*
 
 object BalanceService : IBalanceService {
+
     override fun updateBalance(accountEntry: AccountEntry): Boolean {
         //should be a REST call, but testing it should be fine
 
-        val lock = accountEntry.accNumber.toString() + "_UPDATE_BALANCE_LOCK"
-        LockMangerService.acquireLock(lock, 5000)
+        val lock = acquireBalanceUpdateLock(accountEntry.accNumber)
+        updateBalanceWithNoLock(accountEntry)
+        LockMangerService.releaseLock(lock)
+        return true
+    }
 
+    override fun updateBalanceWithNoLock(accountEntry: AccountEntry): Boolean {
         val balanceCache: BalanceCache? = CrudRepsitory.queryById(accountEntry.accNumber, BalanceCache::class.java)
         if (balanceCache != null) {
             val currentBalance = BigDecimal(balanceCache.balanceAmount)
@@ -39,8 +44,14 @@ object BalanceService : IBalanceService {
                 )
             }
         }
-        LockMangerService.releaseLock(lock)
         return true
+    }
+
+
+    fun acquireBalanceUpdateLock(accNumber: Long): String {
+        val lock = "${accNumber}_UPDATE_BALANCE_LOCK"
+        LockMangerService.acquireLock(lock, 5000)
+        return lock
     }
 
     override fun getBalance(accNumber: Long): Double {
@@ -54,6 +65,7 @@ object BalanceService : IBalanceService {
 //blocking service
 interface IBalanceService {
     fun updateBalance(accountEntry: AccountEntry): Boolean
+    fun updateBalanceWithNoLock(accountEntry: AccountEntry): Boolean
     fun getBalance(accNumber: Long): Double
 }
 

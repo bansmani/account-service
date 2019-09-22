@@ -28,5 +28,7 @@ class TestDomainModelFactory @TestOnly constructor() {
     fun buildDebitEntry(amount: Double=300.0, accNumber: Long = generateAccNumber()) = AccountEntry(accNumber,amount, Instant.now(),
         UUID.randomUUID().toString(),InstructionType.DEBIT,"Test Debit message")
 
+    //fun buildlocalTransferDTO(amount: Double, accNumber: Long) =
+
 
 }

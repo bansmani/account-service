@@ -14,8 +14,9 @@ object TransactionStatuService {
     fun getTransactionStatusBlocking(transactionId: String): TransactionStatusDTO? {
         while (!transactionIdEventList.contains(transactionId)) {
             runBlocking {
-                delay(100)
+                delay(1000)
             }
+            println ("waiting for status")
         }
         return transactionIdEventList[transactionId]
     }
