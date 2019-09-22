@@ -1,4 +1,5 @@
 import javafx.beans.NamedArg
+import jdk.nashorn.internal.runtime.regexp.joni.exception.ErrorMessages
 import java.lang.annotation.Native
 import java.time.Instant
 import java.util.*
@@ -11,6 +12,13 @@ data class InstructionDTO(
     val description: String? = null
 )
 
+data class LocalTransferDTO(
+    val fromAccNumber: Long,
+    val toAccNumber: Long,
+    val amount: Double,
+    val description: String? = null
+)
+
 enum class InstructionType {
     DEBIT,
     CREDIT
@@ -20,7 +28,8 @@ class Transaction(
     val instructionType: InstructionType,
     val accNumber: Long, val amount: Double, val description: String? = ""
 ) {
-    val id = UUID.randomUUID().toString()
+
+    @Id val id = UUID.randomUUID().toString()
     val initiateTime: Instant = Instant.now()
     val endTime: Instant? = null
     val status: TransactionStatus = TransactionStatus.NEW
@@ -43,9 +52,6 @@ class Transaction(
 }
 
 
-
-
-
 data class AccountEntry(
     val accNumber: Long,
     val amount: Double,
@@ -55,12 +61,14 @@ data class AccountEntry(
     val description: String? = null
 )
 
+data class TransactionStatusDTO(val transactionId: String, val status: TransactionStatus, val errorMessages: String )
 
 enum class TransactionStatus {
     NEW,
     COMPLETED,
     FAILED,
-    ERROR
+    ERROR,
+    UNKNOWN
 }
 
 

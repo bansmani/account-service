@@ -1,3 +1,4 @@
+import com.google.gson.Gson
 import org.h2.jdbcx.JdbcDataSource
 import org.objenesis.ObjenesisStd
 import org.slf4j.Logger
@@ -58,7 +59,9 @@ interface ICrudRepsitory {
     fun <T> query(entity: Class<T>): List<T>
     fun createTable(entity: Class<*>): Boolean
     fun <T> queryById(value: Any, entity: Class<T>): T?
-    fun saveOrUpdate(entity: Any, createTableIfMissing: Boolean = false): Boolean
+    fun update(entity: Any, createTableIfMissing: Boolean = false): Boolean
+    fun updateFields(entity: Class<*>, data: Map<String, Any>): Boolean
+    fun updateFields(entity: Class<*>, data: Any): Boolean
 
 }
 
@@ -66,9 +69,34 @@ inline fun <reified T> T.logger(): Logger {
     return LoggerFactory.getLogger(T::class.java)
 }
 
+val gson = Gson()
+
 object CrudRepsitory : ICrudRepsitory {
 
-    override fun saveOrUpdate(entity: Any, createTableIfMissing: Boolean): Boolean {
+    override fun updateFields(entity: Class<*>, data: Any): Boolean {
+        val str = gson.toJson(data)
+        val map = gson.fromJson<Map<String, String>>(str, Map::class.java)
+        return updateFields(entity, map)
+    }
+
+    override fun updateFields(entity: Class<*>, data: Map<String, Any>): Boolean {
+        val tableName = getTableName(entity)
+        var updateString = ""
+        var conditionString = ""
+        val idColumn = getIdColumn(entity)
+        data.forEach { entry ->
+            if (entry.key == idColumn?.first) {
+                conditionString += "${entry.key}='${entry.value}"
+            } else {
+                updateString += "${entry.key}='${entry.value},"
+            }
+        }
+        val sql = "update $tableName set $updateString where $conditionString"
+        println(sql)
+        return execute(sql)
+    }
+
+    override fun update(entity: Any, createTableIfMissing: Boolean): Boolean {
         val tableName = getTableName(entity)
         val idColumn = getIdColumn(entity.javaClass)
         val columns = getColumnsAsString(entity).split(",")
@@ -76,16 +104,15 @@ object CrudRepsitory : ICrudRepsitory {
         var updateString = ""
         var conditionString = ""
         var counter = 0
-        columns.forEach{
-            if(it!=idColumn?.first){
-                updateString+="$it=${values[counter++]} ,"
-            }
-            else {
-                conditionString+="$it=${values[counter++]}"
+        columns.forEach {
+            if (it != idColumn?.first) {
+                updateString += "$it=${values[counter++]} ,"
+            } else {
+                conditionString += "$it=${values[counter++]}"
             }
         }
-         updateString = updateString.removeSuffix(",")
-        val  sql ="update table $tableName set $updateString where $conditionString"
+        updateString = updateString.removeSuffix(",")
+        val sql = "update $tableName set $updateString where $conditionString"
         println(sql)
         return execute(sql)
     }
@@ -99,7 +126,6 @@ object CrudRepsitory : ICrudRepsitory {
         }
         return null;
     }
-
 
 
     val typeMap = mapOf<String, String>("String" to "VARCHAR", "Instant" to "TIMESTAMP")
@@ -209,20 +235,20 @@ object CrudRepsitory : ICrudRepsitory {
         return query("select * from ${getTableName(entity)}", entity)
     }
 
-     override fun <T> queryById(value: Any, entity: Class<T>): T? {
+    override fun <T> queryById(value: Any, entity: Class<T>): T? {
         val idColumn = getIdColumn(entity)
-        if(idColumn!=null){
+        if (idColumn != null) {
             val sql = "select * from ${getTableName(entity)} where ${idColumn.first}='$value'"
             println(sql)
             return query(sql, entity).getOrNull(0)
         }
-         return null
-     }
+        return null
+    }
 
     override fun <T> query(sql: String, entity: Class<T>): List<T> {
-        val rs  = try {
-             ConnectionPool.getConnection().prepareStatement(sql).executeQuery()
-        }catch (e: java.lang.Exception){
+        val rs = try {
+            ConnectionPool.getConnection().prepareStatement(sql).executeQuery()
+        } catch (e: java.lang.Exception) {
             return emptyList()
         }
 
@@ -244,7 +270,7 @@ object CrudRepsitory : ICrudRepsitory {
                     "double" -> field.setDouble(instance, rs.getDouble(i))
                     "int" -> field.setInt(instance, rs.getInt(i))
                     "String" -> field.set(instance, rs.getString(i))
-                    "Instant"  -> field.set(instance, rs.getTimestamp(i).toInstant())
+                    "Instant" -> field.set(instance, rs.getTimestamp(i).toInstant())
                     "LocalDateTime" -> field.set(instance, rs.getTimestamp(i).toLocalDateTime())
                     "Date" -> field.set(instance, rs.getDate(i))
                     "LocalDate" -> field.set(instance, rs.getDate(i).toLocalDate())

@@ -7,6 +7,12 @@ val gson = Gson()
 
 object DomainEventManager {
     private val deserializer = accountEntryDeserializer();
+    private val txnStatusDeserializer = transactionStatusDeserializer();
+
+    fun updateTransactionStatus(payload: TransactionStatusDTO){
+        val jsonString = gson.toJson(payload)
+        JMSMessageBroker.send("TRANSACTION.STATUS", jsonString)
+    }
 
     fun publishDebit(payload: AccountEntry) {
         val jsonString = gson.toJson(payload)
@@ -20,15 +26,22 @@ object DomainEventManager {
 
 
     fun startDebitMessageLister(handler: (message: AccountEntry) -> Unit) {
-        startMessageListener("TRANSACTION.DEBIT", handler)
+        startAccountEntryMessageListener("TRANSACTION.DEBIT", handler)
     }
 
     fun startCreditMessageLister(handler: (message: AccountEntry) -> Unit) {
-        startMessageListener("TRANSACTION.CREDIT", handler)
+        startAccountEntryMessageListener("TRANSACTION.CREDIT", handler)
 
     }
 
-    private fun startMessageListener(queueName : String, handler: (message: AccountEntry) -> Unit) {
+    fun startTransactionStatusMessageListener(handler: (message: TransactionStatusDTO) -> Unit) {
+        JMSMessageBroker.startConsumer("TRANSACTION.STATUS") {
+            val message = txnStatusDeserializer.fromJson(it, TransactionStatusDTO::class.java)
+            handler(message)
+        }
+    }
+
+    private fun startAccountEntryMessageListener(queueName : String, handler: (message: AccountEntry) -> Unit) {
         JMSMessageBroker.startConsumer(queueName) {
             val message = deserializer.fromJson(it, AccountEntry::class.java)
             handler(message)
@@ -39,5 +52,7 @@ object DomainEventManager {
         GsonBuilder().registerTypeAdapter(AccountEntry::class.java,
             InstanceCreator<AccountEntry> { ObjenesisStd().newInstance(AccountEntry::class.java) }).create()
 
-
+    private fun transactionStatusDeserializer() =
+        GsonBuilder().registerTypeAdapter(TransactionStatusDTO::class.java,
+            InstanceCreator<TransactionStatusDTO> { ObjenesisStd().newInstance(TransactionStatusDTO::class.java) }).create()
 }

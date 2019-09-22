@@ -4,6 +4,8 @@ import org.jetbrains.annotations.TestOnly
 
 object LockMangerService : IlockManagerService {
 
+
+    //TODO: Redis could used for distributed locks (RedLock)
     private val lockCollection = HashSet<String>()
 
     override fun releaseLock(lock: String): Boolean {
