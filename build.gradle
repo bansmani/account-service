@@ -46,7 +46,7 @@ allprojects {
             implementation libraries.SERIALIZER
             testCompile libraries.TEST
             testRuntimeOnly libraries.TEST_RUNTIME
-            if (project.name != "ORMLite") {
+            if (project.name != "ORMK") {
                 implementation project(':domain-model')
             }
         }
@@ -59,20 +59,20 @@ allprojects {
 
 project(":domain-model") {
     dependencies {
-        implementation project(":ORMLite")
+        implementation project(":ORMK")
     }
 }
 
 project(":transaction-service") {
     dependencies {
-        implementation project(":ORMLite")
+        implementation project(":ORMK")
         implementation project(":message-broker-service")
     }
 }
 
 project(":credit-service") {
     dependencies {
-        implementation project(":ORMLite")
+        implementation project(":ORMK")
         implementation project(":message-broker-service")
         implementation project(":balance-service")
 
@@ -81,7 +81,7 @@ project(":credit-service") {
 
 project(":debit-service") {
     dependencies {
-        implementation project(":ORMLite")
+        implementation project(":ORMK")
         implementation project(":message-broker-service")
         implementation project(":lockmanager-service")
         implementation project(":balance-service")
@@ -90,7 +90,7 @@ project(":debit-service") {
 
 project(":balance-service") {
     dependencies {
-        implementation project(":ORMLite")
+        implementation project(":ORMK")
         implementation project(":message-broker-service")
         implementation project(":lockmanager-service")
 
@@ -99,13 +99,13 @@ project(":balance-service") {
 
 project(":lockmanager-service") {
     dependencies {
-        implementation project(":ORMLite")
+        implementation project(":ORMK")
         implementation project(":message-broker-service")
     }
 }
 
 
-project(":ORMLite") {
+project(":ORMK") {
     dependencies {
         implementation libraries.H2
         compile group: 'org.objenesis', name: 'objenesis', version: '3.0.1'

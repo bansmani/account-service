@@ -7,6 +7,6 @@ include 'credit-service'
 include 'balance-service'
 
 
-include 'ORMLite'
+include 'ORMK'
 include 'message-broker-service'
 include 'lockmanager-service'
