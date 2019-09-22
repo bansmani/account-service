@@ -1,17 +1,14 @@
 import TransactionStatuService.transactionStatusPoller
 import io.mockk.*
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.function.Executable
 import java.io.File
-import java.lang.Exception
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.concurrent.atomic.AtomicInteger
 
 
 class TransactionServiceTest {

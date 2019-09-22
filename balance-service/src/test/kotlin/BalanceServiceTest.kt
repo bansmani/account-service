@@ -1,7 +1,7 @@
-import io.mockk.*
-import org.junit.jupiter.api.Assertions.*
+import io.mockk.mockkObject
+import io.mockk.verify
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import java.time.Instant
 
 class BalanceServiceTest {
 

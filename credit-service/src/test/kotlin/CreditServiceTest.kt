@@ -1,4 +1,3 @@
-import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.verify
 import org.junit.jupiter.api.Test
