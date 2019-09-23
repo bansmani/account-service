@@ -4,7 +4,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 object TransactionStatuService {
 
-    val transactionIdEventList = ConcurrentHashMap<String, TransactionStatusDTO>()
+    private val transactionIdEventList = ConcurrentHashMap<String, TransactionStatusDTO>()
 
     fun getTransactionStatus(transactionId: String): TransactionStatus {
         return CrudRepsitory.queryById(transactionId, Transaction::class.java)?.status ?: TransactionStatus.UNKNOWN

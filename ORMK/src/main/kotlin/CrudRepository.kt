@@ -64,10 +64,6 @@ interface ICrudRepsitory {
 
 }
 
-inline fun <reified T> T.logger(): Logger {
-    return LoggerFactory.getLogger(T::class.java)
-}
-
 val gson = Gson()
 
 object CrudRepsitory : ICrudRepsitory {
@@ -121,20 +117,20 @@ object CrudRepsitory : ICrudRepsitory {
         val map = mutableMapOf<String, Class<*>>()
         entity.declaredFields.forEach {
             if (it.isAnnotationPresent(Id::class.java)) {
-                map.put(it.name, it.type)
+                map[it.name] = it.type
             }
         }
-        return map;
+        return map
     }
 
 
-    val typeMap = mapOf<String, String>("String" to "VARCHAR", "Instant" to "TIMESTAMP")
+    private val typeMap = mapOf("String" to "VARCHAR", "Instant" to "TIMESTAMP")
     override fun createTable(entity: Class<*>): Boolean {
         val tableName = getTableName(entity)
-        var createTablePrefix = "CREATE TABLE IF NOT EXISTS $tableName ("
+        val createTablePrefix = "CREATE TABLE IF NOT EXISTS $tableName ("
         var columnString = ""
         var pkColumns = ""
-        var createIndexPrefix =
+        val createIndexPrefix =
             "CREATE INDEX IF NOT EXISTS IDX_${tableName.replace(".", "_").toUpperCase()} ON $tableName("
         var indexedColumns = ""
 
@@ -206,7 +202,7 @@ object CrudRepsitory : ICrudRepsitory {
     private fun getValuesAsString(entity: Any): String {
         return entity.javaClass.declaredFields.map { field -> field.isAccessible = true; field.get(entity) }
             .map { any ->
-                if (any == null) null else "'${any.toString()}'"
+                if (any == null) null else "'$any'"
             }
             .reduce { acc, value ->
                 "$acc, $value"
@@ -270,7 +266,7 @@ object CrudRepsitory : ICrudRepsitory {
             }
             for (i in 1..rs.metaData.columnCount) {
                 val colname = rs.metaData.getColumnName(i)
-                val field = entity.getDeclaredField(colCaseInSensitiveMap.get(colname))
+                val field = entity.getDeclaredField(colCaseInSensitiveMap[colname])
                 field.isAccessible = true
                 when (field.type.simpleName) {
                     "long" -> field.setLong(instance, rs.getLong(i))
@@ -293,7 +289,7 @@ object CrudRepsitory : ICrudRepsitory {
             list.add(instance as T)
         }
         @Suppress("UNCHECKED_CAST") val array = list.toArray() as Array<T>
-        return listOf<T>(*array)
+        return listOf(*array)
     }
 }
 

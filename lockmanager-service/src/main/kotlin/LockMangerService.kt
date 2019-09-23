@@ -36,7 +36,6 @@ object LockMangerService : IlockManagerService {
 
 }
 
-class LockReleaseException(lockName: String) : Throwable(lockName)
 class LockAquireFailed(lockName: String) : Throwable(lockName)
 
 

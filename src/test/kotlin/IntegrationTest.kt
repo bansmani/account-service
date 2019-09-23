@@ -8,7 +8,7 @@ import java.math.BigDecimal
 class IntegrationTest {
     companion object {
 
-        fun cleanActiveMQTempDir() {
+        private fun cleanActiveMQTempDir() {
             File("../").walkTopDown()
                 .filter { file -> file.name == "activemq-data" }
                 .forEach { println(it.deleteRecursively()) }
@@ -21,7 +21,7 @@ class IntegrationTest {
             startServices()
         }
 
-        fun startServices() {
+        private fun startServices() {
             //Note: still running in same same JVM
             //to run them on different JVM only need to update JNDI property
             //Sequence of service does not matter
@@ -45,11 +45,11 @@ class IntegrationTest {
 
     @Test
     fun `create mutliple credit and check eventual consitance`() {
-        (1..100).forEach {
+        repeat((1..100).count()) {
             TransactionService.createNewTransaction(TestDomainModelFactory().buildCreditInstructionDto(9876, 10.0))
         }
         Thread.sleep(1000)
-        Assertions.assertEquals(1000.0, BalanceService.getBalance(9876))
+        assertEquals(1000.0, BalanceService.getBalance(9876))
     }
 
 
@@ -60,11 +60,10 @@ class IntegrationTest {
             Thread.sleep(10)
         }
         var expectedBalance = 1000.0
-        (1..100).forEach {
+        repeat((1..100).count()) {
             TransactionService.createNewTransaction(TestDomainModelFactory().buildDebitInstructionDto(4444, 10.0))
-
             expectedBalance = BigDecimal(expectedBalance).subtract(BigDecimal(10.0)).toDouble()
-            Assertions.assertEquals(expectedBalance, BalanceService.getBalance(4444))
+            assertEquals(expectedBalance, BalanceService.getBalance(4444))
         }
         // Thread.sleep(1000)
         // assertEquals(1000.0, BalanceService.getBalance(9876))
@@ -76,12 +75,12 @@ class IntegrationTest {
         while (BalanceService.getBalance(2222) != 2000.0) {
             Thread.sleep(10)
         }
-        (1..100).forEach {
+        repeat((1..100).count()) {
             TransactionService.createNewTransaction(TestDomainModelFactory().buildDebitInstructionDto(2222, 10.0))
             TransactionService.createNewTransaction(TestDomainModelFactory().buildCreditInstructionDto(2222, 10.0))
         }
         Thread.sleep(2000)
-        Assertions.assertEquals(2000.0, BalanceService.getBalance(2222))
+        assertEquals(2000.0, BalanceService.getBalance(2222))
     }
 
     @Test
@@ -90,23 +89,21 @@ class IntegrationTest {
         TransactionService.createNewTransaction(TestDomainModelFactory().buildCreditInstructionDto(6666, 2000.0))
         TransactionService.createNewTransaction(TestDomainModelFactory().buildCreditInstructionDto(5555, 1000.0))
 
-        val AtoB = LocalTransferDTO(6666, 5555, 150.0, "transfer A to B")
-        val BtoA = LocalTransferDTO(5555, 6666, 100.0, "transfer B to A")
 
-        (1..10).forEach {
-            TransactionService.localTransfer(AtoB)
-            TransactionService.localTransfer(BtoA)
+        val atoB = LocalTransferDTO(6666, 5555, 150.0, "transfer A to B")
+        val btoA = LocalTransferDTO(5555, 6666, 100.0, "transfer B to A")
+
+        //when
+        repeat((1..10).count()) {
+            TransactionService.localTransfer(atoB)
+            TransactionService.localTransfer(btoA)
         }
 
-        val Abal = 2000.0 - 1500.0 + 1000.0
-        val Bbal = 1000.0 - 1000.0 + 1500.0
-        val AplusB = 1000.0 + 2000.0
-
+        //wait for credits to process
         Thread.sleep(1000)
 
-       assertEquals(1500.0,  BalanceService.getBalance(6666))
-       assertEquals(1500.0,  BalanceService.getBalance(5555))
-
+        assertEquals(1500.0, BalanceService.getBalance(6666))
+        assertEquals(1500.0, BalanceService.getBalance(5555))
     }
 
 }

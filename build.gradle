@@ -62,7 +62,12 @@ allprojects {
         useJUnitPlatform()
         forkEvery = 1
     }
+
+    clean {
+        delete 'activemq-data'
+    }
 }
+
 
 
 subprojects {

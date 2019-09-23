@@ -27,9 +27,9 @@ class ORMTest {
 
         CrudRepsitory.save(DummyModel("a dummy data", 100), true)
 
-        val query = CrudRepsitory.query<DummyModel>("Select * from test.DummyModel", DummyModel::class.java).first()
+        val query = CrudRepsitory.query("Select * from test.DummyModel", DummyModel::class.java).first()
 
-        assertThat(query.data.equals("a dummy data"))
+        assertThat(query.data == "a dummy data")
         assertThat(query.anint == 100)
     }
 

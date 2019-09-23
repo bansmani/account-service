@@ -10,7 +10,7 @@ val testDomainFactory = TestDomainModelFactory()
 //Testonly is not working as expected, better to create a module and add them as testCompile to all project
 class TestDomainModelFactory @TestOnly constructor() {
 
-    fun generateAccNumber(): Long {
+    private fun generateAccNumber(): Long {
         Thread.sleep(1)
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMddhhmmSSS")).toLong()
     }

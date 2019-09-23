@@ -17,7 +17,7 @@ class TransactionServiceTest {
 
     companion object {
 
-        fun cleanActiveMQTempDir() {
+        private fun cleanActiveMQTempDir() {
             File("../").walkTopDown()
                 .filter { file -> file.name == "activemq-data" }
                 .forEach { println(it.deleteRecursively()) }
@@ -46,17 +46,17 @@ class TransactionServiceTest {
             InstructionDTO(1234, 500.0, InstructionType.DEBIT, "Tuition Fees paid")
         )
         //then it should be valid
-        assertEquals(InstructionType.DEBIT.name, transaction.instructionType!!.name)
+        assertEquals(InstructionType.DEBIT.name, transaction.instructionType.name)
         assertEquals(TransactionStatus.NEW.name, transaction.status.name)
-        assertThat(transaction.transactionId).isNotNull().isNotBlank().isNotEmpty()
-        assertThat(transaction.initiateTime).isNotNull().isInstanceOf(Instant::class.java)
+        assertThat(transaction.transactionId).isNotNull.isNotBlank.isNotEmpty
+        assertThat(transaction.initiateTime).isNotNull.isInstanceOf(Instant::class.java)
         assertThat(transaction.endTime).isNull()
 
         //When a CREDIT Instruction is received
         val anotherTransaction: Transaction = TransactionService.createNewTransaction(
             InstructionDTO(1234, 500.0, InstructionType.CREDIT, "Tuition Fees")
         )
-        assertEquals(InstructionType.CREDIT.name, anotherTransaction.instructionType!!.name)
+        assertEquals(InstructionType.CREDIT.name, anotherTransaction.instructionType.name)
     }
 
 
@@ -108,7 +108,7 @@ class TransactionServiceTest {
     @Test
     fun `local transfer test with insufficient funds`() {
         //TODO: should throw custom exception
-        assertThrows(Exception::class.java, Executable {
+        assertThrows(Exception::class.java, {
             TransactionService.localTransfer(
                 LocalTransferDTO(8888, 5678, 250.0, "transfer A to B"))
         }, "Insufficient funds")

@@ -47,7 +47,7 @@ object TransactionService {
 
         //update transaction status
         publishPayload(transaction)
-        return transaction;
+        return transaction
     }
 
     private fun publishPayload(transaction: Transaction): Boolean {

@@ -6,8 +6,8 @@ import org.objenesis.ObjenesisStd
 val gson = Gson()
 
 object DomainEventManager {
-    private val deserializer = accountEntryDeserializer();
-    private val txnStatusDeserializer = transactionStatusDeserializer();
+    private val deserializer = accountEntryDeserializer()
+    private val txnStatusDeserializer = transactionStatusDeserializer()
 
     fun updateTransactionStatus(payload: TransactionStatusDTO){
         val jsonString = gson.toJson(payload)
