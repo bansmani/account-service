@@ -62,7 +62,8 @@ object BalanceService : IBalanceService {
 
 }
 
-//blocking service
+
+
 interface IBalanceService {
     fun updateBalance(accountEntry: AccountEntry): Boolean
     fun updateBalanceWithNoLock(accountEntry: AccountEntry): Boolean

@@ -1,5 +1,7 @@
-import TransactionStatuService.transactionStatusPoller
-import io.mockk.*
+import io.mockk.Ordering
+import io.mockk.mockkObject
+import io.mockk.verify
+import io.mockk.verifyOrder
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -7,7 +9,6 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.function.Executable
 import java.io.File
-import java.math.BigDecimal
 import java.time.Instant
 
 
@@ -15,7 +16,6 @@ class TransactionServiceTest {
 
 
     companion object {
-        val auth = mockk<Authentication>()
 
         fun cleanActiveMQTempDir() {
             File("../").walkTopDown()
@@ -25,13 +25,14 @@ class TransactionServiceTest {
 
         @BeforeAll
         @JvmStatic
-        fun beforeAll() {
-            every { auth.verify(any()) } returns true
+        fun setup() {
             cleanActiveMQTempDir()
+            TransactionService.start()
             DebitService.start()
             CreditService.start()
-            transactionStatusPoller()
         }
+
+
     }
 
 
@@ -100,53 +101,16 @@ class TransactionServiceTest {
             CrudRepsitory.save(any())
             DomainEventManager.publishCredit(ofType(AccountEntry::class))
         }
-
-        //first create transaction object
-        //save to database
-        //publish payload
-        //return transaction to user
     }
 
-    //invalid since listener is running
-    //Integration Test
-    //@Test
-    fun `transaction service sending debit messages to debit queue`() {
-        val debitInstructionPayload = TestDomainModelFactory().buildDebitInstructionDto()
-        TransactionService.createNewTransaction(debitInstructionPayload)
-        var entry: AccountEntry? = null
-        DomainEventManager.startDebitMessageLister {
-            entry = it
-        }
-        while (entry == null) {
-            Thread.sleep(10)
-        }
-        assertEquals(debitInstructionPayload.accNumber, entry?.accNumber)
-        assertEquals(InstructionType.DEBIT, entry?.transactionType)
-        assertEquals(300.0, entry?.amount)
-    }
 
-    //invalid since listener is running
-    //@Test
-    fun `transaction service sending credit messages to credit queue`() {
-        val creditInstruction = TestDomainModelFactory().buildCreditInstructionDto()
-        TransactionService.createNewTransaction(creditInstruction)
-        var entry: AccountEntry? = null
-        DomainEventManager.startCreditMessageLister {
-            entry = it
-        }
-        while (entry == null) {
-            Thread.sleep(10)
-        }
-        assertEquals(creditInstruction.accNumber, entry?.accNumber)
-        assertEquals(InstructionType.CREDIT, entry?.transactionType)
-        assertEquals(500.0, entry?.amount)
-    }
 
     @Test
     fun `local transfer test with insufficient funds`() {
         //TODO: should throw custom exception
         assertThrows(Exception::class.java, Executable {
-            TransactionService.localTransfer(LocalTransferDTO(1234, 5678, 250.0, "transfer A to B"))
+            TransactionService.localTransfer(
+                LocalTransferDTO(8888, 5678, 250.0, "transfer A to B"))
         }, "Insufficient funds")
     }
 
@@ -160,51 +124,6 @@ class TransactionServiceTest {
     }
 
 
-    @Test
-    fun `create mutliple credit and check eventual consitance`() {
-        (1..100).forEach {
-            TransactionService.createNewTransaction(TestDomainModelFactory().buildCreditInstructionDto(9876, 10.0))
-            //      TransactionService.localTransfer(LocalTransferDTO(9876, 1111, 200.0, "transfer A to B"))
-            //    assertEquals(200.0, BalanceService.getBalance(1111))
-//            assertEquals(300.0, BalanceService.getBalance(9876))
-        }
-        Thread.sleep(1000)
-        assertEquals(1000.0, BalanceService.getBalance(9876))
-    }
-
-
-    @Test
-    fun `create mutliple debit and check strong consitance`() {
-        TransactionService.createNewTransaction(TestDomainModelFactory().buildCreditInstructionDto(4444, 1000.0))
-        while (BalanceService.getBalance(4444) != 1000.0) {
-            Thread.sleep(10)
-        }
-        var expectedBalance = 1000.0
-        (1..100).forEach {
-            TransactionService.createNewTransaction(TestDomainModelFactory().buildDebitInstructionDto(4444, 10.0))
-            //      TransactionService.localTransfer(LocalTransferDTO(9876, 1111, 200.0, "transfer A to B"))
-            //    assertEquals(200.0, BalanceService.getBalance(1111))
-//            assertEquals(300.0, BalanceService.getBalance(9876))
-            expectedBalance = BigDecimal(expectedBalance).subtract(BigDecimal(10.0)).toDouble()
-            assertEquals(expectedBalance, BalanceService.getBalance(4444))
-        }
-       // Thread.sleep(1000)
-            // assertEquals(1000.0, BalanceService.getBalance(9876))
-    }
-
-    @Test
-    fun `concurrency deadloack test with single account`(){
-        TransactionService.createNewTransaction(TestDomainModelFactory().buildCreditInstructionDto(2222, 2000.0))
-        while (BalanceService.getBalance(2222) != 2000.0) {
-            Thread.sleep(10)
-        }
-        (1..100).forEach {
-            TransactionService.createNewTransaction(TestDomainModelFactory().buildDebitInstructionDto(2222, 10.0))
-            TransactionService.createNewTransaction(TestDomainModelFactory().buildCreditInstructionDto(2222, 10.0))
-        }
-        Thread.sleep(2000)
-        assertEquals(2000.0, BalanceService.getBalance(2222))
-    }
 }
 
 

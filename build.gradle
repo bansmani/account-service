@@ -18,6 +18,13 @@ apply from: 'dependencies.gradle'
 group 'com.revolut'
 version '1.0-SNAPSHOT'
 
+dependencies {
+    testImplementation project(":debit-service")
+    testImplementation project(":credit-service")
+    testImplementation project(":balance-service")
+    testImplementation project(":transaction-service")
+}
+
 
 allprojects {
 
@@ -53,9 +60,24 @@ allprojects {
     }
     test {
         useJUnitPlatform()
+        forkEvery = 1
     }
 }
 
+
+subprojects {
+    apply plugin: 'java'
+    // Disable the test report for the individual test task
+    test {
+        reports.html.enabled = false
+    }
+}
+
+task testReport(type: TestReport) {
+    destinationDir = file("$buildDir/reports/allTests")
+    // Include the results from the `test` task in all subprojects
+    reportOn subprojects*.test
+}
 
 project(":domain-model") {
     dependencies {
@@ -123,3 +145,4 @@ project(":message-broker-service") {
         compile group: 'org.objenesis', name: 'objenesis', version: '3.0.1'
     }
 }
+

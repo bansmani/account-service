@@ -1,5 +1,5 @@
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.yield
 import org.jetbrains.annotations.TestOnly
 
 //could use google distributed lock algorithm
@@ -20,7 +20,8 @@ object LockMangerService : IlockManagerService {
                 return
             } else {
                 runBlocking {
-                    delay(1)
+//                    delay(1)
+                    yield()
                 }
             }
         }

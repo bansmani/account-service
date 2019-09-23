@@ -2,6 +2,11 @@ import TransactionStatuService.transactionStatusPoller
 
 object TransactionService {
 
+    fun start()
+    {
+        transactionStatusPoller()
+    }
+
     fun localTransfer(localTransferDTO: LocalTransferDTO): Boolean {
         val debitInstruction = InstructionDTO(
             localTransferDTO.fromAccNumber,
@@ -9,9 +14,9 @@ object TransactionService {
             InstructionType.DEBIT,
             localTransferDTO.description
         )
-        val debitTrans = createNewTransaction(debitInstruction)
-        //blocking  for status
 
+        //blocking  for status
+        val debitTrans = createNewTransaction(debitInstruction)
 
 
         val creditInstruction = InstructionDTO(
@@ -20,13 +25,14 @@ object TransactionService {
             InstructionType.CREDIT,
             localTransferDTO.description + " " + debitTrans.transactionId
         )
+        //no need to block for credit transaction
         val creditTrans = createNewTransaction(creditInstruction)
 
-        val creaditStatus = TransactionStatuService.getTransactionStatusBlocking(creditTrans.transactionId)
-        if (creaditStatus?.status == TransactionStatus.FAILED || creaditStatus?.status == TransactionStatus.ERROR) {
-            //make a custom error
-            throw Exception(creaditStatus.errorMessage)
-        }
+//        val creaditStatus = TransactionStatuService.getTransactionStatusBlocking(creditTrans.transactionId)
+//        if (creaditStatus?.status == TransactionStatus.FAILED || creaditStatus?.status == TransactionStatus.ERROR) {
+//            //make a custom error
+//            throw Exception(creaditStatus.errorMessage)
+//        }
         return true
     }
 
@@ -72,6 +78,6 @@ object TransactionService {
 }
 
 fun main() {
-    transactionStatusPoller()
+    TransactionService.start()
 }
 

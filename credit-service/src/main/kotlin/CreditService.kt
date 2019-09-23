@@ -8,6 +8,7 @@ object CreditService {
         }
     }
 
+    //must give credit otherwise logs
     private fun process(entry: AccountEntry) {
         try {
             retry { CrudRepsitory.save(entry) }

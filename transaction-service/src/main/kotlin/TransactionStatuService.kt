@@ -1,5 +1,5 @@
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.yield
 import java.util.concurrent.ConcurrentHashMap
 
 object TransactionStatuService {
@@ -14,11 +14,13 @@ object TransactionStatuService {
     fun getTransactionStatusBlocking(transactionId: String): TransactionStatusDTO? {
         while (!transactionIdEventList.containsKey(transactionId)) {
             runBlocking {
-                delay(1)
+//                delay(1)
+                yield()
             }
-            println ("waiting for status")
         }
-        return transactionIdEventList[transactionId]
+        val dto = transactionIdEventList[transactionId]
+        transactionIdEventList.remove(transactionId)
+        return dto
     }
 
     fun transactionStatusPoller() {
