@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 import java.time.Instant
 import java.util.*
 
@@ -25,9 +27,10 @@ class Transaction(
     val accNumber: Long, val amount: Double, val description: String? = ""
 ) {
 
-    @Id val transactionId = UUID.randomUUID().toString()
+    @Id
+    val transactionId = UUID.randomUUID().toString()
     val initiateTime: Instant = Instant.now()
-    val endTime: Instant? = null
+    val endTime: String? = null
     val status: TransactionStatus = TransactionStatus.NEW
     val errorMessage: String = ""
 
@@ -58,7 +61,12 @@ data class AccountEntry(
     val description: String? = null
 )
 
-data class TransactionStatusDTO(val transactionId: String, val status: TransactionStatus, val errorMessage: String )
+data class TransactionStatusDTO(
+    val transactionId: String,
+    val status: TransactionStatus,
+    val errorMessage: String,
+    val endTime: String
+)
 
 enum class TransactionStatus {
     NEW,

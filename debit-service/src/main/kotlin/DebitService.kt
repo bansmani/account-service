@@ -1,5 +1,6 @@
 import DomainEventManager.updateTransactionStatus
 import java.math.BigDecimal
+import java.time.Instant
 
 object DebitService {
 
@@ -17,7 +18,7 @@ object DebitService {
                 TransactionStatusDTO(
                     entry.transactionId,
                     TransactionStatus.FAILED,
-                    e.message ?: ""
+                    e.message ?: "", Instant.now().toString()
                 )
             )
             return
@@ -31,7 +32,7 @@ object DebitService {
                 TransactionStatusDTO(
                     entry.transactionId,
                     TransactionStatus.FAILED,
-                    e.message ?: ""
+                    e.message ?: "", Instant.now().toString()
                 )
             )
             return
@@ -44,7 +45,13 @@ object DebitService {
 
             //if neg balance limit is give, check against the limit and not the zero
             if (BigDecimal(balance).subtract(amount).toDouble() < 0.0) {
-                updateTransactionStatus(TransactionStatusDTO(entry.transactionId, TransactionStatus.ERROR,  "Insufficient funds"))
+                updateTransactionStatus(
+                    TransactionStatusDTO(
+                        entry.transactionId,
+                        TransactionStatus.ERROR,
+                        "Insufficient funds",Instant.now().toString()
+                    )
+                )
                 LockMangerService.releaseLock(balanceUpdateLock)
                 LockMangerService.releaseLock(entry.accNumber.toString() + "_DEBIT_ENTRY_LOCK")
                 return
@@ -57,7 +64,7 @@ object DebitService {
                 TransactionStatusDTO(
                     entry.transactionId,
                     TransactionStatus.FAILED,
-                    e.message ?: ""
+                    e.message ?: "", Instant.now().toString()
                 )
             )
             return
@@ -75,13 +82,13 @@ object DebitService {
                 "reversing due to error : " + e.message + " " + entry.description
             )
             retry { CrudRepsitory.save(entry) }
-            updateTransactionStatus(TransactionStatusDTO(entry.transactionId, TransactionStatus.ERROR, e.message ?: ""))
+            updateTransactionStatus(TransactionStatusDTO(entry.transactionId, TransactionStatus.ERROR, e.message ?: "", Instant.now().toString()))
             return
         } finally {
             LockMangerService.releaseLock(balanceUpdateLock)
             LockMangerService.releaseLock(entry.accNumber.toString() + "_DEBIT_ENTRY_LOCK")
         }
-        updateTransactionStatus(TransactionStatusDTO(entry.transactionId, TransactionStatus.COMPLETED, ""))
+        updateTransactionStatus(TransactionStatusDTO(entry.transactionId, TransactionStatus.COMPLETED, "", Instant.now().toString()))
     }
 }
 

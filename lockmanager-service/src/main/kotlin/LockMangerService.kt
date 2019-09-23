@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
 import org.jetbrains.annotations.TestOnly

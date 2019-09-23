@@ -6,7 +6,8 @@ ext {
             SERIALIZER  : [
                     'com.fasterxml.jackson.core:jackson-annotations:2.9.9',
                     'com.fasterxml.jackson.core:jackson-databind:2.9.9.3',
-                    'com.google.code.gson:gson:2.8.5'
+                    'com.google.code.gson:gson:2.8.5',
+                    "com.fasterxml.jackson.module:jackson-module-kotlin:2.10.0.pr1"
             ],
             TEST        : [
                     "org.junit.jupiter:junit-jupiter-api:5.5.2",
@@ -14,7 +15,11 @@ ext {
                     'org.assertj:assertj-core:3.13.2'
             ],
             TEST_RUNTIME: 'org.junit.jupiter:junit-jupiter-engine:5.5.2',
-            COROUTINE :  'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.1'
+            COROUTINE :  'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.1',
+            RESTSERVER : 'io.javalin:javalin:3.5.0',
+            RESTCLIENT : 'com.github.kittinunf.fuel:fuel:2.2.0',
+
+            OBJINT: 'org.objenesis:objenesis:3.0.1'
 
     ]
 }

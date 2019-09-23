@@ -1,13 +1,13 @@
+import TransactionStatuService.getTransactionStatus
 import TransactionStatuService.transactionStatusPoller
 
 object TransactionService {
 
-    fun start()
-    {
+    fun start() {
         transactionStatusPoller()
     }
 
-    fun localTransfer(localTransferDTO: LocalTransferDTO): Boolean {
+    fun localTransfer(localTransferDTO: LocalTransferDTO): Transaction? {
         val debitInstruction = InstructionDTO(
             localTransferDTO.fromAccNumber,
             localTransferDTO.amount,
@@ -26,14 +26,8 @@ object TransactionService {
             localTransferDTO.description + " " + debitTrans.transactionId
         )
         //no need to block for credit transaction
-        val creditTrans = createNewTransaction(creditInstruction)
-
-//        val creaditStatus = TransactionStatuService.getTransactionStatusBlocking(creditTrans.transactionId)
-//        if (creaditStatus?.status == TransactionStatus.FAILED || creaditStatus?.status == TransactionStatus.ERROR) {
-//            //make a custom error
-//            throw Exception(creaditStatus.errorMessage)
-//        }
-        return true
+        createNewTransaction(creditInstruction)
+        return getTransactionStatus(debitTrans.transactionId)
     }
 
 
@@ -66,7 +60,7 @@ object TransactionService {
                 val debitStatus = TransactionStatuService.getTransactionStatusBlocking(transaction.transactionId)
                 if (debitStatus?.status == TransactionStatus.FAILED || debitStatus?.status == TransactionStatus.ERROR) {
                     //make a custom error
-                    throw Exception(debitStatus.errorMessage)
+                    throw InsufficientFundsException(debitStatus.errorMessage)
                 }
             }
             InstructionType.CREDIT -> {
@@ -75,9 +69,13 @@ object TransactionService {
         }
         return true
     }
+
+
+
 }
 
-fun main() {
-    TransactionService.start()
-}
+@Suppress("UNUSED_PARAMETER")
+class InsufficientFundsException(errorMessage: String) : Exception()
+
+
 

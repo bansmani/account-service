@@ -1,6 +1,7 @@
 import DomainEventManager.updateTransactionStatus
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import java.time.Instant
 
 
 //Integraton tests which are breaking due to running listerns in same JVM
@@ -16,7 +17,7 @@ class IntegrationTests{
         var entry: AccountEntry? = null
         DomainEventManager.startDebitMessageLister {
             entry = it
-            updateTransactionStatus(TransactionStatusDTO(it.transactionId, TransactionStatus.COMPLETED, ""))
+            updateTransactionStatus(TransactionStatusDTO(it.transactionId, TransactionStatus.COMPLETED, "", Instant.now().toString()))
         }
         val debitInstructionPayload = TestDomainModelFactory().buildDebitInstructionDto()
         TransactionService.createNewTransaction(debitInstructionPayload)

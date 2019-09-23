@@ -1,8 +1,6 @@
 import com.google.gson.Gson
 import org.h2.jdbcx.JdbcDataSource
 import org.objenesis.ObjenesisStd
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.ResultSet
 import java.util.*
@@ -69,6 +67,7 @@ val gson = Gson()
 object CrudRepsitory : ICrudRepsitory {
 
     override fun updateFields(entity: Class<*>, data: Any): Boolean {
+
         val str = gson.toJson(data)
         val map = gson.fromJson<Map<String, String>>(str, Map::class.java)
         return updateFields(entity, map)
@@ -84,6 +83,7 @@ object CrudRepsitory : ICrudRepsitory {
                 conditionString += "${entry.key}='${entry.value}' and "
             } else {
                 updateString += "${entry.key}='${entry.value}',"
+
             }
         }
         conditionString = conditionString.removeSuffix(" and ")
@@ -173,7 +173,12 @@ object CrudRepsitory : ICrudRepsitory {
     override fun execute(sql: String): Boolean {
         //must throw exception
         println(sql)
-        return ConnectionPool.getConnection().prepareStatement(sql).execute()
+        return try {
+            ConnectionPool.getConnection().prepareStatement(sql).execute()
+        } catch (e: Exception) {
+            println(e.message)
+            throw e
+        }
     }
 
     /***

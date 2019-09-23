@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.function.Executable
 import java.io.File
 import java.time.Instant
 
@@ -48,8 +47,8 @@ class TransactionServiceTest {
         //then it should be valid
         assertEquals(InstructionType.DEBIT.name, transaction.instructionType.name)
         assertEquals(TransactionStatus.NEW.name, transaction.status.name)
-        assertThat(transaction.transactionId).isNotNull.isNotBlank.isNotEmpty
-        assertThat(transaction.initiateTime).isNotNull.isInstanceOf(Instant::class.java)
+        assertThat(transaction.transactionId).isNotNull().isNotBlank().isNotEmpty()
+        assertThat(transaction.initiateTime).isNotNull().isInstanceOf(Instant::class.java)
         assertThat(transaction.endTime).isNull()
 
         //When a CREDIT Instruction is received

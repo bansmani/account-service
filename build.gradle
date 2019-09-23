@@ -12,9 +12,7 @@ buildscript {
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.3.41'
 }
-
 apply from: 'dependencies.gradle'
-
 group 'com.revolut'
 version '1.0-SNAPSHOT'
 
@@ -25,14 +23,11 @@ dependencies {
     testImplementation project(":transaction-service")
 }
 
-
 allprojects {
-
     repositories {
         mavenCentral()
         jcenter()
     }
-
     apply plugin: 'org.jetbrains.kotlin.jvm'
     apply plugin: 'kotlin'
 
@@ -42,7 +37,6 @@ allprojects {
     compileTestKotlin {
         kotlinOptions.jvmTarget = "1.8"
     }
-
 
     dependencies {
         implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
@@ -62,7 +56,6 @@ allprojects {
         useJUnitPlatform()
         forkEvery = 1
     }
-
     clean {
         delete 'activemq-data'
     }
@@ -70,35 +63,25 @@ allprojects {
 
 
 
-subprojects {
-    apply plugin: 'java'
-    // Disable the test report for the individual test task
-    test {
-        reports.html.enabled = false
-    }
-}
-
-task testReport(type: TestReport) {
-    destinationDir = file("$buildDir/reports/allTests")
-    // Include the results from the `test` task in all subprojects
-    reportOn subprojects*.test
-}
-
-project(":domain-model") {
-    dependencies {
-        implementation project(":ORMK")
-    }
-}
 
 project(":transaction-service") {
     dependencies {
         implementation project(":ORMK")
         implementation project(":message-broker-service")
 
+        implementation libraries.RESTSERVER
+        implementation libraries.RESTCLIENT
+
         testImplementation project(":debit-service")
         testImplementation project(":credit-service")
         testImplementation project(":balance-service")
 
+    }
+}
+
+project(":domain-model") {
+    dependencies {
+        implementation project(":ORMK")
     }
 }
 
@@ -140,14 +123,14 @@ project(":lockmanager-service") {
 project(":ORMK") {
     dependencies {
         implementation libraries.H2
-        compile group: 'org.objenesis', name: 'objenesis', version: '3.0.1'
+        compile libraries.OBJINT
     }
 }
 
 project(":message-broker-service") {
     dependencies {
         implementation libraries.AMQ
-        compile group: 'org.objenesis', name: 'objenesis', version: '3.0.1'
+        compile libraries.OBJINT
     }
 }
 

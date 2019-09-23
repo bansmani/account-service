@@ -1,4 +1,5 @@
 import DomainEventManager.updateTransactionStatus
+import java.time.Instant
 
 object CreditService {
 
@@ -13,15 +14,29 @@ object CreditService {
         try {
             retry { CrudRepsitory.save(entry) }
         } catch (e: Exception) {
-            updateTransactionStatus(TransactionStatusDTO(entry.transactionId, TransactionStatus.FAILED, e.message?: ""))
+            updateTransactionStatus(
+                TransactionStatusDTO(
+                    entry.transactionId,
+                    TransactionStatus.FAILED,
+                    e.message ?: "",
+                    Instant.now().toString()
+                )
+            )
         }
         try {
             retry { BalanceService.updateBalance(entry) }
         } catch (e: Exception) {
             //Not very critical, no compensating transaction required
-            updateTransactionStatus(TransactionStatusDTO(entry.transactionId, TransactionStatus.ERROR,e.message?: ""))
+            updateTransactionStatus(
+                TransactionStatusDTO(
+                    entry.transactionId,
+                    TransactionStatus.ERROR,
+                    e.message ?: "",
+                    Instant.now().toString()
+                )
+            )
         }
-        updateTransactionStatus(TransactionStatusDTO(entry.transactionId, TransactionStatus.COMPLETED,""))
+        updateTransactionStatus(TransactionStatusDTO(entry.transactionId, TransactionStatus.COMPLETED, "", Instant.now().toString()))
     }
 }
 
