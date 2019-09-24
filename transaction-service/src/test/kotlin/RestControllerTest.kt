@@ -42,7 +42,7 @@ class RestControllerTest {
 
     @Test
     fun `exception response is handled`() {
-        val atoB = LocalTransferDTO(6666, 5555, 150.0, "transfer A to B")
+        val atoB = LocalTransferInstructionDTO(6666, 5555, 150.0, "transfer A to B")
         mockkObject(RestController)
         val output = "/transfer".postDTO(atoB, ExcceptionResponse::class.java)
         assertEquals("InsufficientFundsException", output.errorCode)
@@ -56,7 +56,7 @@ class RestControllerTest {
         val creditInstructionPayload = InstructionDTO(2121, 5000.0, InstructionType.CREDIT, "Tuition Fees")
         TransactionService.createNewTransaction(creditInstructionPayload)
 
-        val atoB = LocalTransferDTO(2121, 1212, 150.0, "transfer A to B")
+        val atoB = LocalTransferInstructionDTO(2121, 1212, 150.0, "transfer A to B")
         val output = "/transfer".postDTO(atoB, Transaction::class.java)
         assertEquals("COMPLETED", output.status.name)
     }

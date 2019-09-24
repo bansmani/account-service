@@ -1,5 +1,6 @@
 import TransactionStatuService.getTransactionStatus
 import TransactionStatuService.transactionStatusPoller
+import java.util.concurrent.CompletableFuture
 
 object TransactionService {
 
@@ -7,27 +8,19 @@ object TransactionService {
         transactionStatusPoller()
     }
 
-    fun localTransfer(localTransferDTO: LocalTransferDTO): Transaction? {
-        val debitInstruction = InstructionDTO(
-            localTransferDTO.fromAccNumber,
-            localTransferDTO.amount,
-            InstructionType.DEBIT,
-            localTransferDTO.description
-        )
+    fun localTransfer(localTransferInstructionDTO: LocalTransferInstructionDTO): CompletableFuture<Transaction>? {
+        val debitInstruction = localTransferInstructionDTO.toDebitInstructionDTO()
+        val creditInstruction = localTransferInstructionDTO.toCreditInstructionDTO()
 
-        //blocking  for status
-        val debitTrans = createNewTransaction(debitInstruction)
-
-
-        val creditInstruction = InstructionDTO(
-            localTransferDTO.toAccNumber,
-            localTransferDTO.amount,
-            InstructionType.CREDIT,
-            localTransferDTO.description + " " + debitTrans.transactionId
-        )
-        //no need to block for credit transaction
-        createNewTransaction(creditInstruction)
-        return getTransactionStatus(debitTrans.transactionId)
+        return CompletableFuture.supplyAsync {
+            createNewTransaction(debitInstruction)
+        }.thenApply { debitTransaction ->
+            createNewTransaction(creditInstruction)
+            debitTransaction
+        }.thenApply {
+            //if null throw exception
+            getTransactionStatus(it.transactionId)
+        }
     }
 
 
@@ -69,7 +62,6 @@ object TransactionService {
         }
         return true
     }
-
 
 
 }

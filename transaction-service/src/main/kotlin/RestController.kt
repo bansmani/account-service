@@ -23,25 +23,19 @@ object RestController {
     }
 
     fun localTransfer(ctx: Context): Context {
-        val localTransferDTO: LocalTransferDTO = ctx.bodyAsClass(LocalTransferDTO::class.java)
-
-        val transaction = TransactionService.localTransfer(localTransferDTO)
-
-        if (transaction?.status == TransactionStatus.ERROR) {
-            ctx.status(500)
-        }
-        if (transaction?.status == TransactionStatus.FAILED) {
-            ctx.status(501)
-        }
-        return ctx.json(transaction!!)
+        val localTransferInstructionDTO: LocalTransferInstructionDTO =
+            ctx.bodyAsClass(LocalTransferInstructionDTO::class.java)
+        return ctx.json(TransactionService.localTransfer(localTransferInstructionDTO)!!)
     }
 
-    fun buildExceptionResponse(e: Exception, payload: Any) : ExcceptionResponse {
-       return ExcceptionResponse(e.javaClass.name, e.message, Instant.now().toString(), payload)
+    fun buildExceptionResponse(e: Exception, payload: Any): ExcceptionResponse {
+        return ExcceptionResponse(e.javaClass.name, e.message, Instant.now().toString(), payload)
     }
 }
 
-data class ExcceptionResponse(val errorCode: String,
-                          val message: String?,
-                          val time:String,
-                          val requestPayload: Any)
+data class ExcceptionResponse(
+    val errorCode: String,
+    val message: String?,
+    val time: String,
+    val requestPayload: Any
+)

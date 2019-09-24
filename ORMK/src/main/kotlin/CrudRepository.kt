@@ -3,7 +3,7 @@ import org.h2.jdbcx.JdbcDataSource
 import org.objenesis.ObjenesisStd
 import java.sql.Connection
 import java.sql.ResultSet
-import java.util.*
+import java.util.concurrent.ArrayBlockingQueue
 
 
 @Target(AnnotationTarget.CLASS)
@@ -22,7 +22,7 @@ annotation class Entity(val name: String = "")
 
 object ConnectionPool {
 
-    private val pool = ArrayDeque<Connection>()
+    private val pool = ArrayBlockingQueue<Connection>(50)
 
     init {
         createPool()
@@ -34,7 +34,7 @@ object ConnectionPool {
             user = "sa"
             password = "sa"
         }
-        for (i in 1..10) {
+        for (i in 1..50) {
             val conn = ds.connection
             pool.add(conn)
         }

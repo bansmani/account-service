@@ -3,6 +3,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.math.BigDecimal
+import java.util.concurrent.CompletableFuture
 
 class IntegrationTest {
     companion object {
@@ -89,17 +90,19 @@ class IntegrationTest {
         TransactionService.createNewTransaction(TestDomainModelFactory().buildCreditInstructionDto(5555, 1000.0))
 
 
-        val atoB = LocalTransferDTO(6666, 5555, 150.0, "transfer A to B")
-        val btoA = LocalTransferDTO(5555, 6666, 100.0, "transfer B to A")
+        val atoB = LocalTransferInstructionDTO(6666, 5555, 150.0, "transfer A to B")
+        val btoA = LocalTransferInstructionDTO(5555, 6666, 100.0, "transfer B to A")
 
         //when
+        val futureList = mutableListOf<CompletableFuture<Transaction>?>()
         repeat((1..10).count()) {
-            TransactionService.localTransfer(atoB)
-            TransactionService.localTransfer(btoA)
+            futureList.add(TransactionService.localTransfer(atoB))
+            futureList.add(TransactionService.localTransfer(btoA))
         }
 
         //wait for credits to process
-        Thread.sleep(1000)
+        futureList.forEach { it?.get() }
+        Thread.sleep(100)
 
         assertEquals(1500.0, BalanceService.getBalance(6666))
         assertEquals(1500.0, BalanceService.getBalance(5555))

@@ -22,6 +22,7 @@ object LockMangerService : IlockManagerService {
                 return
             } else {
                 runBlocking {
+                    println("waiting for lock ${Thread.currentThread().name}")
 //                    delay(1)
                     yield()
                 }

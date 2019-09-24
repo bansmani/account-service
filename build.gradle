@@ -82,6 +82,8 @@ project(":transaction-service") {
 project(":domain-model") {
     dependencies {
         implementation project(":ORMK")
+        implementation libraries.RESTSERVER
+
     }
 }
 

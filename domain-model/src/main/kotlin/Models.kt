@@ -10,12 +10,29 @@ data class InstructionDTO(
     val description: String? = null
 )
 
-data class LocalTransferDTO(
+data class LocalTransferInstructionDTO(
     val fromAccNumber: Long,
     val toAccNumber: Long,
     val amount: Double,
     val description: String? = null
 )
+
+fun LocalTransferInstructionDTO.toDebitInstructionDTO() =
+    InstructionDTO(
+        fromAccNumber,
+        amount,
+        InstructionType.DEBIT,
+        description
+    )
+
+fun LocalTransferInstructionDTO.toCreditInstructionDTO() =
+    InstructionDTO(
+        toAccNumber,
+        amount,
+        InstructionType.CREDIT,
+        description
+    )
+
 
 enum class InstructionType {
     DEBIT,
@@ -24,7 +41,8 @@ enum class InstructionType {
 
 class Transaction(
     val instructionType: InstructionType,
-    val accNumber: Long, val amount: Double, val description: String? = ""
+    val accNumber: Long, val amount: Double, val description: String? = "",
+    val parentTransactionId: String? = null
 ) {
 
     @Id

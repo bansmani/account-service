@@ -1,4 +1,7 @@
-import kotlinx.coroutines.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.yield
 import java.util.concurrent.ConcurrentHashMap
 
 object TransactionStatuService {
@@ -13,7 +16,7 @@ object TransactionStatuService {
     fun getTransactionStatusBlocking(transactionId: String): TransactionStatusDTO? {
         while (!transactionIdEventList.containsKey(transactionId)) {
             runBlocking {
-                delay(1)
+               // delay(1)
                 yield()
             }
         }
