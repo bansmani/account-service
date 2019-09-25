@@ -28,7 +28,7 @@ object LockMangerService : IlockManagerService {
                 }
             }
         }
-        throw LockAquireFailed(lockName)
+        throw LockAquireFailed("LOCK ACQUIRE FAILED, CONCURRENT UPDATE IS NOT ALLOWED FOR: $lockName")
     }
 
     //for testing, should not go in production

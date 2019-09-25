@@ -172,7 +172,7 @@ object CrudRepsitory : ICrudRepsitory {
 
     override fun execute(sql: String): Boolean {
         //must throw exception
-        println(sql)
+       // println(sql)
         return try {
             ConnectionPool.getConnection().prepareStatement(sql).execute()
         } catch (e: Exception) {

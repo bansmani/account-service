@@ -55,6 +55,7 @@ allprojects {
     test {
         useJUnitPlatform()
         forkEvery = 1
+        failFast = false
     }
     clean {
         delete 'activemq-data'

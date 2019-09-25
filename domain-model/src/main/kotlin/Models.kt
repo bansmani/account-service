@@ -79,6 +79,20 @@ data class AccountEntry(
     val description: String? = null
 )
 
+fun AccountEntry.getCompensatingEntry(){
+    AccountEntry(
+        accNumber,
+        amount,
+        Instant.now(),
+        transactionId,
+        if(transactionType == InstructionType.DEBIT) InstructionType.CREDIT else InstructionType.DEBIT,
+        description + "Compensating transaction"
+    )
+}
+
+
+
+
 data class TransactionStatusDTO(
     val transactionId: String,
     val status: TransactionStatus,

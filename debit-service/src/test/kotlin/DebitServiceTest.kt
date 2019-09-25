@@ -1,5 +1,7 @@
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import java.lang.Exception
 import java.time.Instant
 
 class DebitServiceTest {
@@ -10,23 +12,17 @@ class DebitServiceTest {
             TestDomainModelFactory().generateAccNumber(),
             500.0, Instant.now(), "test-txn-1", InstructionType.DEBIT
         )
-        callPrivate(DebitService, "process", accountEntry)
-        val pollTransactionStatus = DomainEventManager.pollTransactionStatus(1000)
-        println(pollTransactionStatus)
+        assertThrows<InsufficientFundsException> {
+            DebitService.processDebit(accountEntry)
+        }
+//        val pollTransactionStatus = DomainEventManager.pollTransactionStatus(1000)
+//        println(pollTransactionStatus)
     }
 
     @Test
-    fun `raise completed in sufficient funds `() {
-
-        CrudRepsitory.save(
-            BalanceCache(
-                12345,
-                500.0,
-                Instant.now(),
-                "txn1234"
-            ), true
-        )
-
+    fun `raise completed in sufficient funds is available `() {
+        buildInitialCache(12345, 500.0)
+        //make some deposits
         CrudRepsitory.save(
             AccountEntry(
                 12345,
@@ -36,25 +32,30 @@ class DebitServiceTest {
                 InstructionType.CREDIT
             ), true
         )
-  CrudRepsitory.save(
-            AccountEntry(
-                12345,
-                140.0,
-                Instant.now(),
-                "test-txn-4",
-                InstructionType.CREDIT
-            ), true
-        )
-
-
+        //refresh caches manually
         BalanceService.refreshCacheWithNoLock(12345)
 
-        val accountEntry = AccountEntry(12345,
+        //attempt a debit
+        val accountEntry = AccountEntry(
+            12345,
             500.0, Instant.now(), "test-txn-3", InstructionType.DEBIT
         )
-        callPrivate(DebitService, "process", accountEntry)
-        val pollTransactionStatus = DomainEventManager.pollTransactionStatus(1000)
-        println(pollTransactionStatus)
+        DebitService.processDebit(accountEntry)
+
+        val txtnStatus = DomainEventManager.pollTransactionStatus(1000)
+        println(txtnStatus)
+        Assertions.assertEquals("COMPLETED", txtnStatus.status.name)
+    }
+
+    private fun buildInitialCache(accNumber: Long, amount: Double = 500.0) {
+        CrudRepsitory.save(
+            BalanceCache(
+                accNumber,
+                amount,
+                Instant.now(),
+                "txn1234"
+            ), true
+        )
     }
 
 
