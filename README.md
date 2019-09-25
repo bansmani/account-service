@@ -1,6 +1,6 @@
 # moneytransfer
 
-####Some technology selection consideration
+#### Some technology selection consideration
 
 > Since we wanted to make it a standalone runnable solution without external dependency, we are using embedded database and messaging solution. 
 *	Database :  H2 (Distributed Strong consistent database could be used) 
@@ -8,7 +8,7 @@
 *	In Memory Distributed Locking :  Java HashMap  (Redis could be used along with Redlock libraries)  
 *	Javalin as Http server (micronaught with reactive streams could be used ) 
  
-####Components
+#### Components
 
 > There are 5  microservices and 3 shared library project, all microservice is horizontally scalable and thread safe. 
 Gradle multi-module project has been used to manage all services together and achieve better testability with dependency management.
