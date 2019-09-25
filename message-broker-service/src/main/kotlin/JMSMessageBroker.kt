@@ -31,10 +31,23 @@ object JMSMessageBroker : MessageBroker {
 
     }
 
+
     override fun pollMessage(queueName: String, timeoutInMillis: Long): String {
         val creditQueue = session.createQueue(queueName)
         val consumer = session.createConsumer(creditQueue)
-        return (consumer.receive(timeoutInMillis) as TextMessage).text
+        val msg = (consumer.receive(timeoutInMillis) as TextMessage).text
+        consumer.close()
+        return msg
+
+    }
+
+    fun clearQueue(queueName: String, count: Int = 100) {
+        val creditQueue = session.createQueue(queueName)
+        val consumer = session.createConsumer(creditQueue)
+        (1..count).forEach {
+            consumer.receiveNoWait()
+        }
+        consumer.close()
     }
 
 }
@@ -42,5 +55,5 @@ object JMSMessageBroker : MessageBroker {
 interface MessageBroker {
     fun send(queueName: String, message: String)
     fun startConsumer(queueName: String, handler: (msg: String) -> Unit)
-    fun pollMessage(queueName: String, timeoutInMillis: Long) : String
+    fun pollMessage(queueName: String, timeoutInMillis: Long): String
 }

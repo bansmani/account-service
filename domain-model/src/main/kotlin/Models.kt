@@ -10,6 +10,13 @@ data class InstructionDTO(
     val description: String? = null
 )
 
+data class BalanceCache(
+    @Id val accNumber: Long, val balanceAmount: Double,
+    val updateTime: Instant,
+    val updatedRef: String
+)
+
+
 data class LocalTransferInstructionDTO(
     val fromAccNumber: Long,
     val toAccNumber: Long,
@@ -79,18 +86,14 @@ data class AccountEntry(
     val description: String? = null
 )
 
-fun AccountEntry.getCompensatingEntry(){
-    AccountEntry(
-        accNumber,
-        amount,
-        Instant.now(),
-        transactionId,
-        if(transactionType == InstructionType.DEBIT) InstructionType.CREDIT else InstructionType.DEBIT,
-        description + "Compensating transaction"
-    )
-}
-
-
+fun AccountEntry.getCompensatingEntry() = AccountEntry(
+    accNumber,
+    amount,
+    Instant.now(),
+    transactionId,
+    if (transactionType == InstructionType.DEBIT) InstructionType.CREDIT else InstructionType.DEBIT,
+    description + "Compensating transaction"
+)
 
 
 data class TransactionStatusDTO(

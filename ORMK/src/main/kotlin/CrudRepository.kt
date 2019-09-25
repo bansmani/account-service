@@ -49,7 +49,7 @@ object ConnectionPool {
 
 
 interface ICrudRepsitory {
-    fun execute(sql: String): Boolean
+    fun execute(sql: String, silent: Boolean = false): Boolean
     fun save(entity: Any, createTableIfMissing: Boolean = false): Boolean
     fun <T> query(sql: String, entity: Class<T>): List<T>
     fun query(sql: String): ResultSet
@@ -170,14 +170,16 @@ object CrudRepsitory : ICrudRepsitory {
         return true
     }
 
-    override fun execute(sql: String): Boolean {
-        //must throw exception
-       // println(sql)
+    override fun execute(sql: String, silent: Boolean): Boolean {
+        // println(sql)
         return try {
             ConnectionPool.getConnection().prepareStatement(sql).execute()
         } catch (e: Exception) {
-            println(e.message)
-            throw e
+            if (!silent) {
+                println(e.message)
+                throw e
+            }
+            return false
         }
     }
 

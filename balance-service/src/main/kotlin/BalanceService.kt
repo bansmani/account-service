@@ -5,7 +5,6 @@ import java.time.Instant
 import java.util.*
 
 
-class BalanceCache(@Id val accNumber: Long, val balanceAmount: Double, val updateTime: Instant, val updatedRef: String)
 
 object BalanceService {
 

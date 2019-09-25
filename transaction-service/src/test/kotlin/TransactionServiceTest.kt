@@ -17,11 +17,7 @@ import kotlin.system.measureTimeMillis
 class TransactionServiceTest {
 
     companion object {
-        private fun cleanActiveMQTempDir() {
-            File("../").walkTopDown()
-                .filter { file -> file.name == "activemq-data" }
-                .forEach { println(it.deleteRecursively()) }
-        }
+
 
         @BeforeAll
         @JvmStatic

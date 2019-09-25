@@ -1,4 +1,5 @@
 import org.jetbrains.annotations.TestOnly
+import java.io.File
 
 fun <T> retry(retrycount: Int = 3, method: () -> T): T {
     var count = retrycount - 1
@@ -24,4 +25,11 @@ fun callPrivate(obj: Any, methodName: String, value: Any? = null) {
         method.isAccessible = true
         method.invoke(obj)
     }
+}
+
+@TestOnly
+fun cleanActiveMQTempDir() {
+    File("../").walkTopDown()
+        .filter { file -> file.name == "activemq-data" }
+        .forEach { println(it.deleteRecursively()) }
 }
