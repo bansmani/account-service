@@ -16,7 +16,6 @@ object TransactionStatuService {
     fun getTransactionStatusBlocking(transactionId: String): TransactionStatusDTO? {
         while (!transactionIdEventList.containsKey(transactionId)) {
             runBlocking {
-               // delay(1)
                 yield()
             }
         }
@@ -27,13 +26,8 @@ object TransactionStatuService {
 
     fun transactionStatusPoller() {
         GlobalScope.launch {
-
-
             DomainEventManager.startTransactionStatusMessageListener {
-                //raise events on Observable transactions to avoid BD events
-
                 CrudRepsitory.updateFields(Transaction::class.java, it)
-
                 transactionIdEventList[it.transactionId] = it
             }
         }

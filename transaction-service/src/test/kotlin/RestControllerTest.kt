@@ -58,7 +58,8 @@ class RestControllerTest {
 
         val atoB = LocalTransferInstructionDTO(2121, 1212, 150.0, "transfer A to B")
         val output = "/transfer".postDTO(atoB, Transaction::class.java)
-        assertEquals("COMPLETED", output.status.name)
+        val transactionStatus = TransactionStatuService.getTransactionStatus(output.transactionId)
+        assertEquals("COMPLETED", transactionStatus?.status?.name)
     }
 
 }

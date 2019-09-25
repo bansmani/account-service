@@ -41,6 +41,11 @@ object DomainEventManager {
         }
     }
 
+    fun pollTransactionStatus(timeout: Long) : TransactionStatusDTO {
+        val txnStatus = JMSMessageBroker.pollMessage("TRANSACTION.STATUS", timeout)
+        return  txnStatusDeserializer.fromJson(txnStatus, TransactionStatusDTO::class.java)
+    }
+
     private fun startAccountEntryMessageListener(queueName : String, handler: (message: AccountEntry) -> Unit) {
         JMSMessageBroker.startConsumer(queueName) {
             val message = deserializer.fromJson(it, AccountEntry::class.java)

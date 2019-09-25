@@ -15,6 +15,27 @@ object BalanceService : IBalanceService {
         return true
     }
 
+    override fun refreshCache(accNumber: Long): Boolean {
+        //should be a REST call, but testing it should be fine
+        val lock = acquireBalanceUpdateLock(accNumber)
+        refreshCacheWithNoLock(accNumber)
+        LockMangerService.releaseLock(lock)
+        return true
+    }
+
+
+    override fun refreshCacheWithNoLock(accNumber: Long){
+        val creditSumSQL = "SELECT SUM(amount) from AccountEntry where transactionType='CREDIT' and accNumber='$accNumber'"
+        val totalCredit =  BigDecimal( CrudRepsitory.query(creditSumSQL).apply {  next() }.getDouble(1))
+
+        val debitSumSQL = "SELECT SUM(amount) from AccountEntry where transactionType='DEBIT' and accNumber='$accNumber'"
+        val totalDebit =   BigDecimal(CrudRepsitory.query(debitSumSQL).apply {  next() }.getDouble(1))
+
+        CrudRepsitory.update(
+            BalanceCache(accNumber, totalCredit.subtract(totalDebit).toDouble() , Instant.now(), "cache update")
+        )
+    }
+
     override fun updateBalanceWithNoLock(accountEntry: AccountEntry): Boolean {
         val balanceCache: BalanceCache? = CrudRepsitory.queryById(accountEntry.accNumber, BalanceCache::class.java)
         if (balanceCache != null) {
@@ -36,7 +57,7 @@ object BalanceService : IBalanceService {
                         -accountEntry.amount,
                         Instant.now(),
                         accountEntry.transactionId
-                    )
+                    ), true
                 )
             } else {
                 CrudRepsitory.save(
@@ -70,6 +91,8 @@ interface IBalanceService {
     fun updateBalance(accountEntry: AccountEntry): Boolean
     fun updateBalanceWithNoLock(accountEntry: AccountEntry): Boolean
     fun getBalance(accNumber: Long): Double
+    fun refreshCache(accNumber: Long): Boolean
+    fun refreshCacheWithNoLock(accNumber: Long)
 }
 
 class BalanceCache(@Id val accNumber: Long, val balanceAmount: Double, val updateTime: Instant, val updatedRef: String)

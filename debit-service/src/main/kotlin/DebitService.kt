@@ -43,8 +43,9 @@ object DebitService {
             val balance: Double = BalanceService.getBalance(entry.accNumber)
             val amount = BigDecimal(entry.amount)
 
-            //if neg balance limit is give, check against the limit and not the zero
+            //if neg balance is allowed and limit is given, check against the limit and not the zero
             if (BigDecimal(balance).subtract(amount).toDouble() < 0.0) {
+
                 updateTransactionStatus(
                     TransactionStatusDTO(
                         entry.transactionId,
@@ -93,18 +94,7 @@ object DebitService {
 }
 
 //should move to utility functions
-fun <T> retry(retrycount: Int = 3, method: () -> T): T {
-    var count = retrycount - 1
-    while (count-- > 0) {
-        try {
-            return method()
-        } catch (e: Exception) {
-            //log error with trace
-            e.printStackTrace()
-        }
-    }
-    return method()
-}
+
 
 
 fun main() {

@@ -62,16 +62,5 @@ class LockManagerTest {
 }
 
 
-fun callPrivate(obj: Any, methodName: String, value: Any? = null) {
-    if (value != null) {
-        val method = obj::class.java.getDeclaredMethod(methodName, value::class.java)
-        method.isAccessible = true
-        method.invoke(obj, value)
-    } else {
-        val method = obj::class.java.getDeclaredMethod(methodName)
-        method.isAccessible = true
-        method.invoke(obj)
-    }
-}
 
 

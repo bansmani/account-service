@@ -25,10 +25,16 @@ object JMSMessageBroker : MessageBroker {
         val creditQueue = session.createQueue(queueName)
         val consumer = session.createConsumer(creditQueue)
 
-        consumer.setMessageListener{
+        consumer.setMessageListener {
             handler((it as TextMessage).text)
         }
 
+    }
+
+    override fun pollMessage(queueName: String, timeoutInMillis: Long): String {
+        val creditQueue = session.createQueue(queueName)
+        val consumer = session.createConsumer(creditQueue)
+        return (consumer.receive(timeoutInMillis) as TextMessage).text
     }
 
 }
@@ -36,4 +42,5 @@ object JMSMessageBroker : MessageBroker {
 interface MessageBroker {
     fun send(queueName: String, message: String)
     fun startConsumer(queueName: String, handler: (msg: String) -> Unit)
+    fun pollMessage(queueName: String, timeoutInMillis: Long) : String
 }

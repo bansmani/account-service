@@ -17,9 +17,6 @@ object TransactionService {
         }.thenApply { debitTransaction ->
             createNewTransaction(creditInstruction)
             debitTransaction
-        }.thenApply {
-            //if null throw exception
-            getTransactionStatus(it.transactionId)
         }
     }
 
@@ -30,7 +27,7 @@ object TransactionService {
             instruction.accNumber, instruction.amount, instruction.description
         )
         //throw exception, let caller handle it
-        CrudRepsitory.save(transaction, true)
+        retry { CrudRepsitory.save(transaction, true) }
 
         //update transaction status
         publishPayload(transaction)
@@ -48,11 +45,10 @@ object TransactionService {
         )
         when (transaction.instructionType) {
             InstructionType.DEBIT -> {
+                //This could be converted to a request response topic
                 DomainEventManager.publishDebit(accountEntry)
-
                 val debitStatus = TransactionStatuService.getTransactionStatusBlocking(transaction.transactionId)
                 if (debitStatus?.status == TransactionStatus.FAILED || debitStatus?.status == TransactionStatus.ERROR) {
-                    //make a custom error
                     throw InsufficientFundsException(debitStatus.errorMessage)
                 }
             }
